@@ -1,0 +1,34 @@
+[Unit]
+Description=Moltbot Gateway - Personal AI Assistant
+Documentation=https://docs.molt.bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=moltbot
+Group=moltbot
+WorkingDirectory=/home/moltbot
+Environment=NODE_ENV=production
+Environment=PATH=/home/moltbot/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HOME=/home/moltbot
+ExecStart=/home/moltbot/.npm-global/bin/moltbot gateway --port 18789
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=moltbot
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/moltbot/.config/moltbot /home/moltbot/.local/share/moltbot /home/moltbot/.npm-global
+
+# Resource limits
+LimitNOFILE=65535
+MemoryMax=2G
+
+[Install]
+WantedBy=multi-user.target
