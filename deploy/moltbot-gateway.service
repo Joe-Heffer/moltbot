@@ -28,6 +28,12 @@ PrivateTmp=yes
 ProtectSystem=strict
 ProtectHome=read-only
 ReadWritePaths=/home/moltbot/.config/moltbot /home/moltbot/.local/share/moltbot /home/moltbot/.npm-global
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
 
 # Resource limits
 # NOTE: install.sh auto-tunes MemoryMax (75% of RAM, max 2G) and

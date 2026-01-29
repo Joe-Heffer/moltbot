@@ -1,35 +1,17 @@
 #!/bin/bash
 #
-# Moltbot Update Script for Oracle Linux
+# Moltbot Update Script
 # Updates moltbot to the latest version with zero-downtime where possible
 #
 
 set -euo pipefail
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/lib.sh"
 
 MOLTBOT_USER="${MOLTBOT_USER:-moltbot}"
+MOLTBOT_PORT="${MOLTBOT_PORT:-18789}"
 SERVICE_NAME="moltbot-gateway"
-
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
 
 check_user_exists() {
     if ! id "$MOLTBOT_USER" &>/dev/null; then
@@ -79,8 +61,8 @@ wait_for_healthy() {
 
     while [ $attempt -le $max_attempts ]; do
         if systemctl is-active --quiet "$SERVICE_NAME"; then
-            # Check if port is listening
-            if ss -tlnp 2>/dev/null | grep -q ":18789"; then
+            # Check if configured port is listening
+            if ss -tlnp 2>/dev/null | grep -q ":${MOLTBOT_PORT}\b"; then
                 log_success "Service is healthy (attempt ${attempt}/${max_attempts})"
                 return 0
             fi
@@ -111,6 +93,8 @@ main() {
     log_info "Moltbot Update Script"
     echo ""
 
+    require_root
+    validate_port "$MOLTBOT_PORT" "MOLTBOT_PORT"
     check_user_exists
     update_moltbot
     restart_service

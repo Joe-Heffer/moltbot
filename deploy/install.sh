@@ -7,12 +7,8 @@
 
 set -euo pipefail
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/lib.sh"
 
 MOLTBOT_USER="${MOLTBOT_USER:-moltbot}"
 MOLTBOT_HOME="/home/${MOLTBOT_USER}"
@@ -25,33 +21,23 @@ TOTAL_RAM_MB=0
 MEMORY_MAX=""
 NODE_HEAP_SIZE=""
 
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
+# Track installation progress for cleanup on failure
+INSTALL_PHASE=""
 
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-check_root() {
-    if [[ $EUID -ne 0 ]]; then
-        log_error "This script must be run as root (use sudo)"
-        exit 1
+cleanup_on_failure() {
+    if [[ -n "$INSTALL_PHASE" ]]; then
+        log_error "Installation failed during phase: ${INSTALL_PHASE}"
+        log_error "The system may be in a partially configured state."
+        log_error "Review the output above and re-run the installer after fixing any issues."
     fi
 }
+
+trap cleanup_on_failure ERR
 
 detect_os() {
     if command -v apt-get &> /dev/null; then
         OS_FAMILY="debian"
-        log_info "Detected Debian/Ubuntu: $(lsb_release -ds 2>/dev/null || cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2)"
+        log_info "Detected Debian/Ubuntu: $(lsb_release -ds 2>/dev/null || (source /etc/os-release && echo "$PRETTY_NAME"))"
     elif command -v dnf &> /dev/null; then
         OS_FAMILY="rhel"
         log_info "Detected RHEL/Oracle Linux: $(cat /etc/oracle-release 2>/dev/null || cat /etc/redhat-release 2>/dev/null || echo 'unknown')"
@@ -150,14 +136,19 @@ install_nodejs() {
 
     # Install Node.js via NodeSource repository
     if [[ "$OS_FAMILY" == "debian" ]]; then
-        curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
+        curl -fsSL "https://deb.nodesource.com/setup_${NODE_VERSION}.x" | bash -
         apt-get install -y nodejs
     else
-        curl -fsSL https://rpm.nodesource.com/setup_${NODE_VERSION}.x | bash -
+        curl -fsSL "https://rpm.nodesource.com/setup_${NODE_VERSION}.x" | bash -
         dnf install -y nodejs
     fi
 
     # Verify installation
+    if ! command -v node &> /dev/null; then
+        log_error "Node.js installation failed — 'node' command not found"
+        exit 1
+    fi
+
     NODE_INSTALLED_VERSION=$(node -v)
     log_success "Node.js ${NODE_INSTALLED_VERSION} installed"
 
@@ -226,10 +217,7 @@ install_moltbot() {
 setup_systemd_service() {
     log_info "Setting up systemd service..."
 
-    # Copy service file
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-    # Create service file
+    # Create service file with auto-tuned resource limits
     cat > /etc/systemd/system/moltbot-gateway.service << EOF
 [Unit]
 Description=Moltbot Gateway - Personal AI Assistant
@@ -261,6 +249,12 @@ PrivateTmp=yes
 ProtectSystem=strict
 ProtectHome=read-only
 ReadWritePaths=${MOLTBOT_CONFIG_DIR} ${MOLTBOT_DATA_DIR} ${MOLTBOT_HOME}/.npm-global
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
 
 # Resource limits
 LimitNOFILE=65535
@@ -280,11 +274,11 @@ configure_firewall() {
     log_info "Configuring firewall..."
 
     if systemctl is-active --quiet firewalld 2>/dev/null; then
-        firewall-cmd --permanent --add-port=${MOLTBOT_PORT}/tcp
+        firewall-cmd --permanent --add-port="${MOLTBOT_PORT}/tcp"
         firewall-cmd --reload
         log_success "Firewall configured via firewalld (port ${MOLTBOT_PORT} opened)"
     elif command -v ufw &> /dev/null && ufw status | grep -q "active"; then
-        ufw allow ${MOLTBOT_PORT}/tcp
+        ufw allow "${MOLTBOT_PORT}/tcp"
         log_success "Firewall configured via ufw (port ${MOLTBOT_PORT} opened)"
     else
         log_warn "No active firewall detected, skipping firewall configuration"
@@ -293,8 +287,6 @@ configure_firewall() {
 
 copy_env_template() {
     log_info "Creating environment template..."
-
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
     if [[ -f "${SCRIPT_DIR}/moltbot.env.template" ]]; then
         cp "${SCRIPT_DIR}/moltbot.env.template" "${MOLTBOT_CONFIG_DIR}/moltbot.env.template"
@@ -316,7 +308,7 @@ copy_env_template() {
 print_next_steps() {
     echo ""
     echo "=============================================="
-    echo -e "${GREEN}Moltbot installation complete!${NC}"
+    echo -e "${LIB_GREEN}Moltbot installation complete!${LIB_NC}"
     echo "=============================================="
     echo ""
     echo "Next steps:"
@@ -349,16 +341,36 @@ main() {
     log_info "Starting Moltbot installation..."
     echo ""
 
-    check_root
+    require_root
+    validate_port "$MOLTBOT_PORT" "MOLTBOT_PORT"
     detect_os
+
+    INSTALL_PHASE="resource detection"
     detect_resources
+
+    INSTALL_PHASE="dependency installation"
     install_dependencies
+
+    INSTALL_PHASE="Node.js installation"
     install_nodejs
+
+    INSTALL_PHASE="user creation"
     create_moltbot_user
+
+    INSTALL_PHASE="moltbot installation"
     install_moltbot
+
+    INSTALL_PHASE="systemd setup"
     setup_systemd_service
+
+    INSTALL_PHASE="firewall configuration"
     configure_firewall
+
+    INSTALL_PHASE="environment template"
     copy_env_template
+
+    # Clear phase — installation succeeded
+    INSTALL_PHASE=""
     print_next_steps
 }
 

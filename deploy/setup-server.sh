@@ -6,34 +6,12 @@
 
 set -euo pipefail
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/lib.sh"
 
 DEPLOY_USER="${DEPLOY_USER:-deploy}"
 DEPLOY_PATH="/opt/moltbot-deploy"
 GITHUB_REPO="${GITHUB_REPO:-Joe-Heffer/moltbot}"
-
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
-}
-
-check_root() {
-    if [[ $EUID -ne 0 ]]; then
-        echo -e "${RED}[ERROR]${NC} This script must be run as root (use sudo)"
-        exit 1
-    fi
-}
 
 create_deploy_user() {
     log_info "Setting up deployment user..."
@@ -47,32 +25,41 @@ create_deploy_user() {
 
     # Add deploy user to sudoers for specific commands (passwordless)
     # Resolve actual binary paths (handles /bin vs /usr/bin symlink differences)
-    SYSTEMCTL_PATH=$(command -v systemctl)
-    JOURNALCTL_PATH=$(command -v journalctl)
-    SU_PATH=$(command -v su)
-    GIT_PATH=$(command -v git)
-    MKDIR_PATH=$(command -v mkdir)
-    CHMOD_PATH=$(command -v chmod)
+    local systemctl_path journalctl_path su_path
+    systemctl_path=$(command -v systemctl)
+    journalctl_path=$(command -v journalctl)
+    su_path=$(command -v su)
 
+    # Principle of least privilege: only allow the specific commands needed
+    # for deployment operations. Avoid broad wildcards that could enable
+    # privilege escalation.
     cat > /etc/sudoers.d/moltbot-deploy << EOF
 # Allow deploy user to manage moltbot service and run deploy scripts
-deploy ALL=(ALL) NOPASSWD: ${SYSTEMCTL_PATH} start moltbot-gateway
-deploy ALL=(ALL) NOPASSWD: ${SYSTEMCTL_PATH} stop moltbot-gateway
-deploy ALL=(ALL) NOPASSWD: ${SYSTEMCTL_PATH} restart moltbot-gateway
-deploy ALL=(ALL) NOPASSWD: ${SYSTEMCTL_PATH} status moltbot-gateway *
-deploy ALL=(ALL) NOPASSWD: ${SYSTEMCTL_PATH} is-active moltbot-gateway
-deploy ALL=(ALL) NOPASSWD: ${SYSTEMCTL_PATH} daemon-reload
-deploy ALL=(ALL) NOPASSWD: ${JOURNALCTL_PATH} -u moltbot-gateway *
-deploy ALL=(ALL) NOPASSWD: /opt/moltbot-deploy/deploy/install.sh
-deploy ALL=(ALL) NOPASSWD: /opt/moltbot-deploy/deploy/update.sh
-deploy ALL=(ALL) NOPASSWD: ${GIT_PATH} *
-deploy ALL=(ALL) NOPASSWD: ${MKDIR_PATH} -p /opt/moltbot-deploy
-deploy ALL=(ALL) NOPASSWD: ${CHMOD_PATH} *
-deploy ALL=(ALL) NOPASSWD: ${SU_PATH} - moltbot *
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} start moltbot-gateway
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} stop moltbot-gateway
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} restart moltbot-gateway
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} status moltbot-gateway
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} status moltbot-gateway --no-pager
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} is-active moltbot-gateway
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} daemon-reload
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${journalctl_path} -u moltbot-gateway *
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /opt/moltbot-deploy/deploy/install.sh
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /opt/moltbot-deploy/deploy/update.sh
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${su_path} - moltbot -c *
 EOF
 
     chmod 440 /etc/sudoers.d/moltbot-deploy
-    log_success "Sudoers configured"
+
+    # Validate sudoers syntax to avoid lockout
+    if command -v visudo &> /dev/null; then
+        if ! visudo -cf /etc/sudoers.d/moltbot-deploy; then
+            log_error "Invalid sudoers syntax — removing file to prevent lockout"
+            rm -f /etc/sudoers.d/moltbot-deploy
+            exit 1
+        fi
+    fi
+
+    log_success "Sudoers configured for user '${DEPLOY_USER}'"
 }
 
 setup_ssh_for_deploy() {
@@ -91,7 +78,7 @@ setup_ssh_for_deploy() {
 
     echo ""
     echo "=============================================="
-    echo -e "${YELLOW}ACTION REQUIRED: Add your GitHub Actions SSH public key${NC}"
+    echo -e "${LIB_YELLOW}ACTION REQUIRED: Add your GitHub Actions SSH public key${LIB_NC}"
     echo "=============================================="
     echo ""
     echo "1. Generate an SSH key pair for GitHub Actions (on your local machine):"
@@ -134,7 +121,7 @@ harden_ssh() {
 
     echo ""
     echo "=============================================="
-    echo -e "${YELLOW}SSH Security Recommendations${NC}"
+    echo -e "${LIB_YELLOW}SSH Security Recommendations${LIB_NC}"
     echo "=============================================="
     echo ""
     echo "Consider adding these to /etc/ssh/sshd_config:"
@@ -157,7 +144,7 @@ harden_ssh() {
 print_next_steps() {
     echo ""
     echo "=============================================="
-    echo -e "${GREEN}Server Setup Complete!${NC}"
+    echo -e "${LIB_GREEN}Server Setup Complete!${LIB_NC}"
     echo "=============================================="
     echo ""
     echo "Next steps:"
@@ -183,7 +170,7 @@ main() {
     log_info "Moltbot Server Setup Script"
     echo ""
 
-    check_root
+    require_root
     create_deploy_user
     setup_deploy_directory
     configure_firewall_ssh
