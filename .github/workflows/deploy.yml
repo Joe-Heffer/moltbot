@@ -1,0 +1,128 @@
+name: Deploy to Ionos VPS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'deploy/**'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Deployment action'
+        required: true
+        default: 'update'
+        type: choice
+        options:
+          - update
+          - install
+          - restart
+
+env:
+  MOLTBOT_USER: moltbot
+  DEPLOY_PATH: /opt/moltbot-deploy
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to Ionos VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -e
+
+            echo "=== Moltbot Deployment Started ==="
+
+            # Determine action (from workflow_dispatch or default to update)
+            ACTION="${{ github.event.inputs.action || 'update' }}"
+            echo "Action: $ACTION"
+
+            # Ensure deploy directory exists
+            sudo mkdir -p ${{ env.DEPLOY_PATH }}
+            cd ${{ env.DEPLOY_PATH }}
+
+            # Clone or update the repository
+            if [ -d ".git" ]; then
+              echo "Updating existing repository..."
+              sudo git fetch origin main
+              sudo git reset --hard origin/main
+            else
+              echo "Cloning repository..."
+              sudo git clone https://github.com/${{ github.repository }}.git .
+            fi
+
+            # Make scripts executable
+            sudo chmod +x deploy/*.sh
+
+            # Execute based on action
+            case "$ACTION" in
+              install)
+                echo "Running full installation..."
+                sudo ./deploy/install.sh
+                ;;
+              update)
+                echo "Updating moltbot..."
+                sudo -u ${{ env.MOLTBOT_USER }} -i npm update -g moltbot || true
+                sudo systemctl restart moltbot-gateway || echo "Service not yet configured"
+                ;;
+              restart)
+                echo "Restarting service..."
+                sudo systemctl restart moltbot-gateway
+                ;;
+            esac
+
+            # Show status
+            echo ""
+            echo "=== Deployment Complete ==="
+            sudo systemctl status moltbot-gateway --no-pager || true
+            echo ""
+            sudo -u ${{ env.MOLTBOT_USER }} -i moltbot --version || echo "Moltbot not yet installed"
+
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    needs: deploy
+
+    steps:
+      - name: Wait for service to stabilize
+        run: sleep 10
+
+      - name: Check service health
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            echo "=== Health Check ==="
+
+            # Check if service is running
+            if sudo systemctl is-active --quiet moltbot-gateway; then
+              echo "Service is running"
+            else
+              echo "Service is NOT running"
+              sudo journalctl -u moltbot-gateway -n 20 --no-pager
+              exit 1
+            fi
+
+            # Check if port is listening
+            if ss -tlnp | grep -q ":18789"; then
+              echo "Gateway is listening on port 18789"
+            else
+              echo "Gateway is NOT listening"
+              exit 1
+            fi
+
+            echo "Health check passed"

@@ -50,10 +50,76 @@ The `install.sh` script performs the following:
 ```
 deploy/
 ├── install.sh              # Main installation script
+├── update.sh               # Update script for CI/CD
+├── setup-server.sh         # One-time server preparation for CI/CD
 ├── uninstall.sh            # Removal script
 ├── moltbot-gateway.service # Systemd service file (reference)
 └── moltbot.env.template    # Environment variable template
+
+.github/workflows/
+└── deploy.yml              # GitHub Actions deployment workflow
 ```
+
+## CI/CD Deployment (GitHub Actions)
+
+For automated deployments to your Ionos VPS, use the included GitHub Actions workflow.
+
+### One-Time Server Setup
+
+1. **SSH into your Ionos VPS** and run the server setup script:
+
+   ```bash
+   # Download and run setup script
+   curl -fsSL https://raw.githubusercontent.com/Joe-Heffer/moltbot/main/deploy/setup-server.sh -o setup-server.sh
+   chmod +x setup-server.sh
+   sudo ./setup-server.sh
+   ```
+
+   This creates a `deploy` user with limited sudo permissions for CI/CD.
+
+2. **Generate an SSH key pair** (on your local machine):
+
+   ```bash
+   ssh-keygen -t ed25519 -C "github-actions-moltbot" -f ~/.ssh/moltbot-deploy
+   ```
+
+3. **Add the public key to your server**:
+
+   ```bash
+   # Copy to server
+   ssh-copy-id -i ~/.ssh/moltbot-deploy.pub deploy@your-server-ip
+   ```
+
+4. **Add GitHub repository secrets** at `Settings > Secrets > Actions`:
+
+   | Secret | Value |
+   |--------|-------|
+   | `VPS_HOST` | Your Ionos VPS IP address |
+   | `VPS_USERNAME` | `deploy` |
+   | `VPS_SSH_KEY` | Contents of `~/.ssh/moltbot-deploy` (private key) |
+   | `VPS_PORT` | `22` (or your custom SSH port) |
+
+### Deployment Triggers
+
+The workflow runs automatically when:
+- Changes are pushed to `main` branch in the `deploy/` directory
+- Manually triggered via GitHub Actions UI
+
+### Manual Deployment
+
+Go to `Actions` > `Deploy to Ionos VPS` > `Run workflow` and choose:
+
+| Action | Description |
+|--------|-------------|
+| `update` | Updates moltbot to latest version and restarts service |
+| `install` | Full installation (first-time setup) |
+| `restart` | Restarts the moltbot-gateway service |
+
+### Workflow Features
+
+- **Health checks**: Verifies service is running and port is listening
+- **Zero-downtime updates**: Service restarts only after successful update
+- **Automatic rollback info**: Logs previous version for easy rollback
 
 ## Configuration
 
