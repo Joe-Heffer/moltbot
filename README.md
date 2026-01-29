@@ -64,7 +64,8 @@ deploy/
 └── moltbot.env.template    # Environment variable template
 
 .github/workflows/
-└── deploy.yml              # GitHub Actions deployment workflow
+├── deploy.yml              # GitHub Actions deployment workflow (with environment tracking)
+└── lint.yml                # ShellCheck, actionlint, yamllint
 ```
 
 ## CI/CD Deployment (GitHub Actions)
@@ -124,7 +125,9 @@ Go to `Actions` > `Deploy to VPS` > `Run workflow` and choose:
 
 ### Workflow Features
 
-- **Health checks**: Verifies service is running and port is listening
+- **Deployment tracking**: Each deploy is recorded in the GitHub Environments UI — view history, status, and the live commit under `Settings > Environments > production`
+- **Concurrency control**: Only one deployment runs at a time; subsequent triggers queue instead of overlapping
+- **Health checks**: Verifies service is running and port is listening after deploy
 - **Zero-downtime updates**: Service restarts only after successful update
 - **Automatic rollback info**: Logs previous version for easy rollback
 
