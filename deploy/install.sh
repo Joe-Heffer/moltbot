@@ -142,7 +142,13 @@ create_moltbot_user() {
     mkdir -p "${MOLTBOT_HOME}/.npm-global"
 
     # Set npm global prefix for the moltbot user
-    sudo -u "$MOLTBOT_USER" npm config set prefix "${MOLTBOT_HOME}/.npm-global"
+    # Write .npmrc directly to avoid sudo HOME environment issues
+    # (sudo -u without -H keeps caller's HOME, so npm config set
+    # would write to the wrong .npmrc)
+    cat > "${MOLTBOT_HOME}/.npmrc" << NPMRC
+prefix=${MOLTBOT_HOME}/.npm-global
+NPMRC
+    chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_HOME}/.npmrc"
 
     # Ensure PATH includes npm global bin in profile
     if ! grep -q ".npm-global/bin" "${MOLTBOT_HOME}/.bashrc" 2>/dev/null; then
@@ -156,10 +162,22 @@ create_moltbot_user() {
 install_moltbot() {
     log_info "Installing moltbot..."
 
-    # Install moltbot as the moltbot user (.bashrc sets up PATH)
+    # Install moltbot as the moltbot user (-i loads login shell which sets HOME)
     sudo -u "$MOLTBOT_USER" -i npm install -g moltbot@latest
 
-    log_success "Moltbot installed"
+    # Verify binary was installed to the correct location
+    if [[ ! -x "${MOLTBOT_HOME}/.npm-global/bin/moltbot" ]]; then
+        log_error "moltbot binary not found at ${MOLTBOT_HOME}/.npm-global/bin/moltbot"
+        log_error "npm prefix may not be configured correctly"
+        log_error "Contents of ${MOLTBOT_HOME}/.npmrc:"
+        cat "${MOLTBOT_HOME}/.npmrc" 2>/dev/null || echo "(file not found)"
+        log_error "npm global prefix reported by npm:"
+        sudo -u "$MOLTBOT_USER" -i npm prefix -g 2>/dev/null || echo "(unable to determine)"
+        exit 1
+    fi
+
+    log_success "Moltbot installed at ${MOLTBOT_HOME}/.npm-global/bin/moltbot"
+    sudo -u "$MOLTBOT_USER" -i moltbot --version || true
 }
 
 setup_systemd_service() {
