@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Initial Server Setup for Moltbot Deployment
-# Run this ONCE on a fresh Ionos VPS to prepare for CI/CD deployments
+# Run this ONCE on a fresh VPS to prepare for CI/CD deployments
 #
 
 set -euo pipefail

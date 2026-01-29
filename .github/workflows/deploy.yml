@@ -1,4 +1,4 @@
-name: Deploy to Ionos VPS
+name: Deploy to VPS
 
 on:
   push:
@@ -31,7 +31,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy to Ionos VPS
+      - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
