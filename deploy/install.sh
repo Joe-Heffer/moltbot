@@ -184,6 +184,8 @@ WorkingDirectory=${MOLTBOT_HOME}
 Environment=NODE_ENV=production
 Environment=PATH=${MOLTBOT_HOME}/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
 Environment=HOME=${MOLTBOT_HOME}
+EnvironmentFile=-${MOLTBOT_CONFIG_DIR}/.env
+ExecStartPre=/bin/sh -c 'echo "moltbot-gateway: pre-start checks..." && test -x ${MOLTBOT_HOME}/.npm-global/bin/moltbot || { echo "FATAL: ${MOLTBOT_HOME}/.npm-global/bin/moltbot not found or not executable"; exit 1; } && test -f ${MOLTBOT_CONFIG_DIR}/.env || echo "WARN: ${MOLTBOT_CONFIG_DIR}/.env not found, running without env file"'
 ExecStart=${MOLTBOT_HOME}/.npm-global/bin/moltbot gateway --port ${MOLTBOT_PORT}
 Restart=always
 RestartSec=10
@@ -236,6 +238,16 @@ copy_env_template() {
         cp "${SCRIPT_DIR}/moltbot.env.template" "${MOLTBOT_CONFIG_DIR}/moltbot.env.template"
         chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_CONFIG_DIR}/moltbot.env.template"
         log_success "Environment template copied to ${MOLTBOT_CONFIG_DIR}"
+
+        # Create .env from template if it doesn't already exist
+        if [[ ! -f "${MOLTBOT_CONFIG_DIR}/.env" ]]; then
+            cp "${SCRIPT_DIR}/moltbot.env.template" "${MOLTBOT_CONFIG_DIR}/.env"
+            chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_CONFIG_DIR}/.env"
+            chmod 600 "${MOLTBOT_CONFIG_DIR}/.env"
+            log_warn "Created ${MOLTBOT_CONFIG_DIR}/.env from template — edit it to add your API keys before starting the service"
+        else
+            log_info "Existing .env file preserved at ${MOLTBOT_CONFIG_DIR}/.env"
+        fi
     fi
 }
 
