@@ -55,4 +55,4 @@ There is no build step or test suite — this is a scripts-and-docs repository.
 - **System user**: `moltbot` (non-root, created by installer)
 - **Service**: `moltbot-gateway` systemd unit on port 18789
 - **Security**: `NoNewPrivileges`, `ProtectSystem=strict`, `ProtectHome=read-only`, dedicated user
-- **Low-memory**: Auto-tunes `MemoryMax` and `--max-old-space-size`; temporary swap for installs on <2 GB RAM
+- **Low-memory**: Auto-tunes `MemoryMax` and `--max-old-space-size`; temporary swap for installs on <4 GB RAM; minimum 2 GB RAM enforced by installer

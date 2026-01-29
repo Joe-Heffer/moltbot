@@ -48,7 +48,7 @@ validate_port() {
 }
 
 # Temporary swap support for low-memory systems
-# npm install can exceed available RAM on small VPS instances (<1 GB),
+# npm install can exceed available RAM on small VPS instances (<4 GB),
 # causing the OOM killer to SIGKILL the process.  These helpers create
 # a temporary swap file before the install and clean it up afterwards.
 

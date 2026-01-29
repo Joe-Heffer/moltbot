@@ -16,12 +16,12 @@ Moltbot is a personal AI assistant that runs on your own hardware. It connects t
 
 - Ubuntu Linux 24.04 LTS
 - Root/sudo access
-- At least 1 GB RAM (2 GB recommended, 4 GB ideal)
+- At least 2 GB RAM (4 GB recommended); see the [official system requirements](https://docs.molt.bot/help/faq)
 - An API key from [Anthropic](https://console.anthropic.com/) or [OpenAI](https://platform.openai.com/)
 
 > **Low-memory VPS**: The installer automatically detects available RAM and
 > tunes `MemoryMax` and Node.js heap size accordingly. Systems with less than
-> 2 GB RAM will work but should add swap space (see [Low-Memory VPS](#low-memory-vps) below).
+> 4 GB RAM should add swap space (see [Low-Memory VPS](#low-memory-vps) below).
 
 ## Quick Start
 
@@ -212,14 +212,16 @@ For secure remote access, consider using [Tailscale Serve/Funnel](https://docs.m
 
 ## Low-Memory VPS
 
-If your VPS has 1 GB RAM (e.g. an entry-level VPS with 1 vCPU / 1 GB / 10 GB SSD), the installer will automatically apply low-memory optimizations:
+The minimum RAM for running Moltbot is 2 GB (see [official system requirements](https://docs.molt.bot/help/faq)). Systems with 1 GB RAM do not have enough memory for the Node.js runtime, V8 heap, and channel connections combined — the OOM killer will terminate the gateway under normal operation.
 
-| Setting | 1 GB RAM | 2 GB RAM | 4 GB+ RAM |
-|---------|----------|----------|-----------|
-| `MemoryMax` | 768M | 1536M | 2G |
-| `--max-old-space-size` | 512 MB | 1024 MB | 1536 MB |
+The installer automatically tunes resource limits based on detected RAM:
 
-### Adding swap space (recommended for <= 1 GB RAM)
+| Setting | 2 GB RAM | 4 GB+ RAM |
+|---------|----------|-----------|
+| `MemoryMax` | 1536M | 2G |
+| `--max-old-space-size` | 1024 MB | 1536 MB |
+
+### Adding swap space (recommended for 2 GB RAM)
 
 Creating a swap file prevents the OOM killer from terminating moltbot during memory spikes:
 
@@ -240,7 +242,7 @@ sudo sysctl -p
 
 ### Reducing channel overhead
 
-Each messaging channel (WhatsApp, Telegram, Discord, Slack) maintains a persistent connection that consumes memory. On a 1 GB VPS, enable only the channels you need in your `.env` file.
+Each messaging channel (WhatsApp, Telegram, Discord, Slack) maintains a persistent connection that consumes memory. On a 2 GB VPS, enable only the channels you need in your `.env` file.
 
 ## Troubleshooting
 
