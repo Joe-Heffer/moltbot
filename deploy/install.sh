@@ -1,7 +1,8 @@
 #!/bin/bash
 #
-# Moltbot Installation Script for Oracle Linux
+# Moltbot Installation Script
 # Installs moltbot and configures it as a systemd service
+# Supports: Ubuntu/Debian and Oracle Linux/RHEL
 #
 
 set -euo pipefail
@@ -19,6 +20,7 @@ MOLTBOT_CONFIG_DIR="${MOLTBOT_HOME}/.config/moltbot"
 MOLTBOT_DATA_DIR="${MOLTBOT_HOME}/.local/share/moltbot"
 NODE_VERSION="22"
 MOLTBOT_PORT="${MOLTBOT_PORT:-18789}"
+OS_FAMILY=""
 
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -43,37 +45,53 @@ check_root() {
     fi
 }
 
-check_oracle_linux() {
-    if [[ -f /etc/oracle-release ]]; then
-        log_info "Detected Oracle Linux: $(cat /etc/oracle-release)"
-    elif [[ -f /etc/os-release ]] && grep -q "Oracle" /etc/os-release; then
-        log_info "Detected Oracle Linux variant"
+detect_os() {
+    if command -v apt-get &> /dev/null; then
+        OS_FAMILY="debian"
+        log_info "Detected Debian/Ubuntu: $(lsb_release -ds 2>/dev/null || cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2)"
+    elif command -v dnf &> /dev/null; then
+        OS_FAMILY="rhel"
+        log_info "Detected RHEL/Oracle Linux: $(cat /etc/oracle-release 2>/dev/null || cat /etc/redhat-release 2>/dev/null || echo 'unknown')"
     else
-        log_warn "This script is designed for Oracle Linux but will attempt to continue"
+        log_error "Unsupported OS: requires apt-get (Debian/Ubuntu) or dnf (RHEL/Oracle Linux)"
+        exit 1
     fi
 }
 
 install_dependencies() {
     log_info "Installing system dependencies..."
 
-    # Update package cache
-    dnf check-update || true
-
-    # Install essential packages
-    dnf install -y \
-        curl \
-        wget \
-        git \
-        gcc \
-        gcc-c++ \
-        make \
-        python3 \
-        tar \
-        xz \
-        unzip \
-        jq \
-        firewalld \
-        || true
+    if [[ "$OS_FAMILY" == "debian" ]]; then
+        apt-get update
+        apt-get install -y \
+            curl \
+            wget \
+            git \
+            gcc \
+            g++ \
+            make \
+            python3 \
+            tar \
+            xz-utils \
+            unzip \
+            jq
+    else
+        dnf check-update || true
+        dnf install -y \
+            curl \
+            wget \
+            git \
+            gcc \
+            gcc-c++ \
+            make \
+            python3 \
+            tar \
+            xz \
+            unzip \
+            jq \
+            firewalld \
+            || true
+    fi
 
     log_success "System dependencies installed"
 }
@@ -91,8 +109,13 @@ install_nodejs() {
     fi
 
     # Install Node.js via NodeSource repository
-    curl -fsSL https://rpm.nodesource.com/setup_${NODE_VERSION}.x | bash -
-    dnf install -y nodejs
+    if [[ "$OS_FAMILY" == "debian" ]]; then
+        curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
+        apt-get install -y nodejs
+    else
+        curl -fsSL https://rpm.nodesource.com/setup_${NODE_VERSION}.x | bash -
+        dnf install -y nodejs
+    fi
 
     # Verify installation
     NODE_INSTALLED_VERSION=$(node -v)
@@ -195,13 +218,15 @@ EOF
 configure_firewall() {
     log_info "Configuring firewall..."
 
-    if systemctl is-active --quiet firewalld; then
-        # Add moltbot port
+    if systemctl is-active --quiet firewalld 2>/dev/null; then
         firewall-cmd --permanent --add-port=${MOLTBOT_PORT}/tcp
         firewall-cmd --reload
-        log_success "Firewall configured (port ${MOLTBOT_PORT} opened)"
+        log_success "Firewall configured via firewalld (port ${MOLTBOT_PORT} opened)"
+    elif command -v ufw &> /dev/null && ufw status | grep -q "active"; then
+        ufw allow ${MOLTBOT_PORT}/tcp
+        log_success "Firewall configured via ufw (port ${MOLTBOT_PORT} opened)"
     else
-        log_warn "firewalld not running, skipping firewall configuration"
+        log_warn "No active firewall detected, skipping firewall configuration"
     fi
 }
 
@@ -250,11 +275,11 @@ print_next_steps() {
 }
 
 main() {
-    log_info "Starting Moltbot installation for Oracle Linux..."
+    log_info "Starting Moltbot installation..."
     echo ""
 
     check_root
-    check_oracle_linux
+    detect_os
     install_dependencies
     install_nodejs
     create_moltbot_user
