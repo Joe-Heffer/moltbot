@@ -73,7 +73,15 @@ jobs:
                 ;;
               update)
                 echo "Updating moltbot..."
-                sudo su - ${{ env.MOLTBOT_USER }} -c "npm update -g moltbot" || true
+                # Ensure npm prefix is configured (fixes missing .npmrc from earlier installs)
+                if ! grep -q "prefix=" /home/${{ env.MOLTBOT_USER }}/.npmrc 2>/dev/null; then
+                  echo "prefix=/home/${{ env.MOLTBOT_USER }}/.npm-global" > /home/${{ env.MOLTBOT_USER }}/.npmrc
+                  chown ${{ env.MOLTBOT_USER }}:${{ env.MOLTBOT_USER }} /home/${{ env.MOLTBOT_USER }}/.npmrc
+                  echo "Fixed: wrote npm prefix to .npmrc"
+                fi
+                sudo su - ${{ env.MOLTBOT_USER }} -c "npm install -g moltbot@latest"
+                # Verify binary exists before restarting service
+                ls -la /home/${{ env.MOLTBOT_USER }}/.npm-global/bin/moltbot
                 sudo systemctl restart moltbot-gateway || echo "Service not yet configured"
                 ;;
               restart)
