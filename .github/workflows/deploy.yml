@@ -57,22 +57,22 @@ jobs:
             ACTION="${{ github.event.inputs.action || 'update' }}"
             echo "Action: $ACTION"
 
-            # Ensure deploy directory exists
-            sudo mkdir -p ${{ env.DEPLOY_PATH }}
+            # Deploy directory is owned by the deploy user (created by setup-server.sh)
             cd ${{ env.DEPLOY_PATH }}
 
             # Clone or update the repository
+            # No sudo — deploy user owns the directory
             if [ -d ".git" ]; then
               echo "Updating existing repository..."
-              sudo git fetch origin main
-              sudo git reset --hard origin/main
+              git fetch origin main
+              git reset --hard origin/main
             else
               echo "Cloning repository..."
-              sudo git clone https://github.com/${{ github.repository }}.git .
+              git clone https://github.com/${{ github.repository }}.git .
             fi
 
             # Make scripts executable
-            sudo chmod +x deploy/*.sh
+            chmod +x deploy/*.sh
 
             # Execute based on action
             case "$ACTION" in
@@ -82,16 +82,7 @@ jobs:
                 ;;
               update)
                 echo "Updating moltbot..."
-                # Ensure npm prefix is configured (fixes missing .npmrc from earlier installs)
-                if ! sudo grep -q "prefix=" /home/${{ env.MOLTBOT_USER }}/.npmrc 2>/dev/null; then
-                  echo "prefix=/home/${{ env.MOLTBOT_USER }}/.npm-global" | sudo tee /home/${{ env.MOLTBOT_USER }}/.npmrc > /dev/null
-                  sudo chown ${{ env.MOLTBOT_USER }}:${{ env.MOLTBOT_USER }} /home/${{ env.MOLTBOT_USER }}/.npmrc
-                  echo "Fixed: wrote npm prefix to .npmrc"
-                fi
-                sudo su - ${{ env.MOLTBOT_USER }} -c "npm install -g moltbot@beta"
-                # Verify binary exists before restarting service
-                ls -la /home/${{ env.MOLTBOT_USER }}/.npm-global/bin/moltbot
-                sudo systemctl restart moltbot-gateway || echo "Service not yet configured"
+                sudo ./deploy/update.sh
                 ;;
               restart)
                 echo "Restarting service..."

@@ -24,11 +24,23 @@ get_current_version() {
     sudo -u "$MOLTBOT_USER" -i moltbot --version 2>/dev/null || echo "unknown"
 }
 
+ensure_npm_prefix() {
+    local npmrc_path="/home/${MOLTBOT_USER}/.npmrc"
+    if ! grep -q "prefix=" "$npmrc_path" 2>/dev/null; then
+        echo "prefix=/home/${MOLTBOT_USER}/.npm-global" >> "$npmrc_path"
+        chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "$npmrc_path"
+        log_info "Fixed: wrote npm prefix to .npmrc"
+    fi
+}
+
 update_moltbot() {
     log_info "Updating moltbot..."
 
     CURRENT_VERSION=$(get_current_version)
     log_info "Current version: ${CURRENT_VERSION}"
+
+    # Ensure npm prefix is configured (fixes missing .npmrc from earlier installs)
+    ensure_npm_prefix
 
     # Ensure enough memory for npm install (OOM-killed on <1 GB VPS)
     ensure_swap_for_install
