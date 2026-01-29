@@ -1,5 +1,8 @@
 # Moltbot Deployment
 
+[![Deploy to VPS](https://github.com/Joe-Heffer/moltbot/actions/workflows/deploy.yml/badge.svg)](https://github.com/Joe-Heffer/moltbot/actions/workflows/deploy.yml)
+[![Lint](https://github.com/Joe-Heffer/moltbot/actions/workflows/lint.yml/badge.svg)](https://github.com/Joe-Heffer/moltbot/actions/workflows/lint.yml)
+
 Deployment scripts and configuration for running [Moltbot](https://molt.bot) (formerly Clawdbot) on Linux VPS.
 
 ## What is Moltbot?
