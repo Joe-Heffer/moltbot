@@ -13,7 +13,6 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 MOLTBOT_USER="${MOLTBOT_USER:-moltbot}"
-MOLTBOT_HOME="/home/${MOLTBOT_USER}"
 MOLTBOT_PORT="${MOLTBOT_PORT:-18789}"
 
 log_info() {
