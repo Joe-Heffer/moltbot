@@ -74,9 +74,9 @@ jobs:
               update)
                 echo "Updating moltbot..."
                 # Ensure npm prefix is configured (fixes missing .npmrc from earlier installs)
-                if ! grep -q "prefix=" /home/${{ env.MOLTBOT_USER }}/.npmrc 2>/dev/null; then
-                  echo "prefix=/home/${{ env.MOLTBOT_USER }}/.npm-global" > /home/${{ env.MOLTBOT_USER }}/.npmrc
-                  chown ${{ env.MOLTBOT_USER }}:${{ env.MOLTBOT_USER }} /home/${{ env.MOLTBOT_USER }}/.npmrc
+                if ! sudo grep -q "prefix=" /home/${{ env.MOLTBOT_USER }}/.npmrc 2>/dev/null; then
+                  echo "prefix=/home/${{ env.MOLTBOT_USER }}/.npm-global" | sudo tee /home/${{ env.MOLTBOT_USER }}/.npmrc > /dev/null
+                  sudo chown ${{ env.MOLTBOT_USER }}:${{ env.MOLTBOT_USER }} /home/${{ env.MOLTBOT_USER }}/.npmrc
                   echo "Fixed: wrote npm prefix to .npmrc"
                 fi
                 sudo su - ${{ env.MOLTBOT_USER }} -c "npm install -g moltbot@beta"
