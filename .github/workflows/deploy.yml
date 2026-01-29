@@ -73,7 +73,7 @@ jobs:
                 ;;
               update)
                 echo "Updating moltbot..."
-                sudo -u ${{ env.MOLTBOT_USER }} -i npm update -g moltbot || true
+                sudo su - ${{ env.MOLTBOT_USER }} -c "npm update -g moltbot" || true
                 sudo systemctl restart moltbot-gateway || echo "Service not yet configured"
                 ;;
               restart)
@@ -85,9 +85,9 @@ jobs:
             # Show status
             echo ""
             echo "=== Deployment Complete ==="
-            sudo systemctl status moltbot-gateway --no-pager || true
+            sudo systemctl status moltbot-gateway || true
             echo ""
-            sudo -u ${{ env.MOLTBOT_USER }} -i moltbot --version || echo "Moltbot not yet installed"
+            sudo su - ${{ env.MOLTBOT_USER }} -c "moltbot --version" || echo "Moltbot not yet installed"
 
   health-check:
     name: Health Check
