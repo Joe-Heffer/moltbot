@@ -202,6 +202,14 @@ NPMRC
 install_moltbot() {
     log_info "Installing moltbot..."
 
+    # Clean up stale npm temporary directories that cause ENOTEMPTY on reinstall.
+    # npm renames the existing package to a dotfile before replacing it; if a
+    # previous run was interrupted these leftovers block the next attempt.
+    local npm_modules="${MOLTBOT_HOME}/.npm-global/lib/node_modules"
+    if [[ -d "$npm_modules" ]]; then
+        find "$npm_modules" -maxdepth 1 -name '.moltbot-*' -type d -exec rm -rf {} + 2>/dev/null || true
+    fi
+
     # Install moltbot as the moltbot user (-i loads login shell which sets HOME)
     # Use @beta tag: the @latest (v0.1.0) tag is a placeholder package
     # missing the "bin" field, so npm creates no executable.
