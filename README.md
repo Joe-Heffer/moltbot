@@ -13,8 +13,12 @@ Moltbot is a personal AI assistant that runs on your own hardware. It connects t
 
 - Ubuntu Linux 24.04 LTS
 - Root/sudo access
-- At least 2GB RAM (4GB recommended)
+- At least 1 GB RAM (2 GB recommended, 4 GB ideal)
 - An API key from [Anthropic](https://console.anthropic.com/) or [OpenAI](https://platform.openai.com/)
+
+> **Low-memory VPS**: The installer automatically detects available RAM and
+> tunes `MemoryMax` and Node.js heap size accordingly. Systems with less than
+> 2 GB RAM will work but should add swap space (see [Low-Memory VPS](#low-memory-vps) below).
 
 ## Quick Start
 
@@ -197,6 +201,38 @@ For secure remote access, consider using [Tailscale Serve/Funnel](https://docs.m
 5. **Review skills**: Only install skills from trusted sources
 
 6. **Isolate the VM**: Run moltbot on a dedicated VM that doesn't contain sensitive data
+
+## Low-Memory VPS
+
+If your VPS has 1 GB RAM (e.g. an entry-level VPS with 1 vCPU / 1 GB / 10 GB SSD), the installer will automatically apply low-memory optimizations:
+
+| Setting | 1 GB RAM | 2 GB RAM | 4 GB+ RAM |
+|---------|----------|----------|-----------|
+| `MemoryMax` | 768M | 1536M | 2G |
+| `--max-old-space-size` | 512 MB | 1024 MB | 1536 MB |
+
+### Adding swap space (recommended for <= 1 GB RAM)
+
+Creating a swap file prevents the OOM killer from terminating moltbot during memory spikes:
+
+```bash
+# Create a 2 GB swap file
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# Make it permanent
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+# Reduce swappiness so swap is only used under pressure
+echo 'vm.swappiness=10' | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+```
+
+### Reducing channel overhead
+
+Each messaging channel (WhatsApp, Telegram, Discord, Slack) maintains a persistent connection that consumes memory. On a 1 GB VPS, enable only the channels you need in your `.env` file.
 
 ## Troubleshooting
 

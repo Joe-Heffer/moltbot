@@ -10,6 +10,7 @@ User=moltbot
 Group=moltbot
 WorkingDirectory=/home/moltbot
 Environment=NODE_ENV=production
+Environment=NODE_OPTIONS=--max-old-space-size=1536
 Environment=PATH=/home/moltbot/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
 Environment=HOME=/home/moltbot
 EnvironmentFile=-/home/moltbot/.config/moltbot/.env
@@ -29,6 +30,9 @@ ProtectHome=read-only
 ReadWritePaths=/home/moltbot/.config/moltbot /home/moltbot/.local/share/moltbot /home/moltbot/.npm-global
 
 # Resource limits
+# NOTE: install.sh auto-tunes MemoryMax (75% of RAM, max 2G) and
+# NODE_OPTIONS --max-old-space-size (50% of RAM, max 1536M) based on
+# detected system memory. The values below are defaults for 4GB+ systems.
 LimitNOFILE=65535
 MemoryMax=2G
 
