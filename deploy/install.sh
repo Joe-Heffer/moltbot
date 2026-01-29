@@ -21,6 +21,9 @@ MOLTBOT_DATA_DIR="${MOLTBOT_HOME}/.local/share/moltbot"
 NODE_VERSION="22"
 MOLTBOT_PORT="${MOLTBOT_PORT:-18789}"
 OS_FAMILY=""
+TOTAL_RAM_MB=0
+MEMORY_MAX=""
+NODE_HEAP_SIZE=""
 
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -56,6 +59,43 @@ detect_os() {
         log_error "Unsupported OS: requires apt-get (Debian/Ubuntu) or dnf (RHEL/Oracle Linux)"
         exit 1
     fi
+}
+
+detect_resources() {
+    log_info "Detecting system resources..."
+
+    # Detect total RAM in MB
+    TOTAL_RAM_MB=$(awk '/^MemTotal:/ { printf "%d", $2 / 1024 }' /proc/meminfo)
+    log_info "Total RAM: ${TOTAL_RAM_MB} MB"
+
+    if [[ "$TOTAL_RAM_MB" -lt 1024 ]]; then
+        log_warn "System has less than 1 GB RAM — moltbot may be unstable"
+    elif [[ "$TOTAL_RAM_MB" -lt 2048 ]]; then
+        log_warn "System has less than 2 GB RAM (recommended minimum)"
+        log_info "Applying low-memory optimizations automatically"
+    fi
+
+    # Set MemoryMax to 75% of total RAM, capped at 2G
+    local ram_75pct=$(( TOTAL_RAM_MB * 75 / 100 ))
+    if [[ "$ram_75pct" -ge 2048 ]]; then
+        MEMORY_MAX="2G"
+    else
+        MEMORY_MAX="${ram_75pct}M"
+    fi
+
+    # Set Node.js max-old-space-size to 50% of total RAM, capped at 1536 MB
+    local heap_size=$(( TOTAL_RAM_MB * 50 / 100 ))
+    if [[ "$heap_size" -gt 1536 ]]; then
+        heap_size=1536
+    fi
+    # Floor at 128 MB to avoid startup failures
+    if [[ "$heap_size" -lt 128 ]]; then
+        heap_size=128
+    fi
+    NODE_HEAP_SIZE="$heap_size"
+
+    log_info "Systemd MemoryMax: ${MEMORY_MAX}"
+    log_info "Node.js heap limit: ${NODE_HEAP_SIZE} MB"
 }
 
 install_dependencies() {
@@ -203,6 +243,7 @@ User=${MOLTBOT_USER}
 Group=${MOLTBOT_USER}
 WorkingDirectory=${MOLTBOT_HOME}
 Environment=NODE_ENV=production
+Environment=NODE_OPTIONS=--max-old-space-size=${NODE_HEAP_SIZE}
 Environment=PATH=${MOLTBOT_HOME}/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
 Environment=HOME=${MOLTBOT_HOME}
 EnvironmentFile=-${MOLTBOT_CONFIG_DIR}/.env
@@ -223,7 +264,7 @@ ReadWritePaths=${MOLTBOT_CONFIG_DIR} ${MOLTBOT_DATA_DIR} ${MOLTBOT_HOME}/.npm-gl
 
 # Resource limits
 LimitNOFILE=65535
-MemoryMax=2G
+MemoryMax=${MEMORY_MAX}
 
 [Install]
 WantedBy=multi-user.target
@@ -310,6 +351,7 @@ main() {
 
     check_root
     detect_os
+    detect_resources
     install_dependencies
     install_nodejs
     create_moltbot_user
