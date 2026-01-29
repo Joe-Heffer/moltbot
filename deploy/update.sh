@@ -45,11 +45,8 @@ update_moltbot() {
     # Ensure enough memory for npm install (OOM-killed on <1 GB VPS)
     ensure_swap_for_install
 
-    # Update via npm
-    sudo -u "$MOLTBOT_USER" -i bash -c '
-        export PATH="${HOME}/.npm-global/bin:${PATH}"
-        npm install -g moltbot@beta
-    '
+    # Update via npm (-i sources .profile which sets PATH to include .npm-global/bin)
+    sudo -u "$MOLTBOT_USER" -i npm install -g moltbot@beta
 
     remove_temp_swap
 
