@@ -156,11 +156,8 @@ create_moltbot_user() {
 install_moltbot() {
     log_info "Installing moltbot..."
 
-    # Install moltbot as the moltbot user
-    sudo -u "$MOLTBOT_USER" -i bash -c '
-        export PATH="${HOME}/.npm-global/bin:${PATH}"
-        npm install -g moltbot@latest
-    '
+    # Install moltbot as the moltbot user (.bashrc sets up PATH)
+    sudo -u "$MOLTBOT_USER" -i npm install -g moltbot@latest
 
     log_success "Moltbot installed"
 }
