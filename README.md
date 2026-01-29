@@ -1,6 +1,6 @@
-# Moltbot Deployment for Oracle Linux
+# Moltbot Deployment
 
-Deployment scripts and configuration for running [Moltbot](https://molt.bot) (formerly Clawdbot) on Oracle Linux VPS.
+Deployment scripts and configuration for running [Moltbot](https://molt.bot) (formerly Clawdbot) on Linux VPS.
 
 ## What is Moltbot?
 
@@ -11,7 +11,7 @@ Moltbot is a personal AI assistant that runs on your own hardware. It connects t
 
 ## Prerequisites
 
-- Oracle Linux 8 or 9 (or compatible RHEL-based distro)
+- Ubuntu Linux 24.04 LTS
 - Root/sudo access
 - At least 2GB RAM (4GB recommended)
 - An API key from [Anthropic](https://console.anthropic.com/) or [OpenAI](https://platform.openai.com/)
@@ -62,11 +62,11 @@ deploy/
 
 ## CI/CD Deployment (GitHub Actions)
 
-For automated deployments to your Ionos VPS, use the included GitHub Actions workflow.
+For automated deployments to your VPS, use the included GitHub Actions workflow.
 
 ### One-Time Server Setup
 
-1. **SSH into your Ionos VPS** and run the server setup script:
+1. **SSH into your VPS** and run the server setup script:
 
    ```bash
    # Download and run setup script
@@ -94,7 +94,7 @@ For automated deployments to your Ionos VPS, use the included GitHub Actions wor
 
    | Secret | Value |
    |--------|-------|
-   | `VPS_HOST` | Your Ionos VPS IP address |
+   | `VPS_HOST` | Your VPS IP address |
    | `VPS_USERNAME` | `deploy` |
    | `VPS_SSH_KEY` | Contents of `~/.ssh/moltbot-deploy` (private key) |
    | `VPS_PORT` | `22` (or your custom SSH port) |
@@ -107,7 +107,7 @@ The workflow runs automatically when:
 
 ### Manual Deployment
 
-Go to `Actions` > `Deploy to Ionos VPS` > `Run workflow` and choose:
+Go to `Actions` > `Deploy to VPS` > `Run workflow` and choose:
 
 | Action | Description |
 |--------|-------------|
