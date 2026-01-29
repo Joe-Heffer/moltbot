@@ -57,21 +57,25 @@ update_moltbot() {
 restart_service() {
     log_info "Restarting ${SERVICE_NAME}..."
 
-    if systemctl is-active --quiet "$SERVICE_NAME"; then
-        systemctl restart "$SERVICE_NAME"
-        log_success "Service restarted"
-    else
-        log_warn "Service was not running, starting it..."
-        systemctl start "$SERVICE_NAME"
-        log_success "Service started"
-    fi
+    # Stop the service and reset failure state to break any existing restart
+    # loops.  Without this, systemd may still be scheduling restarts from a
+    # previous crash cycle, and our `start` would race with those restarts.
+    systemctl stop "$SERVICE_NAME" 2>/dev/null || true
+    systemctl reset-failed "$SERVICE_NAME" 2>/dev/null || true
+
+    systemctl start "$SERVICE_NAME"
+    log_success "Service started (clean)"
 }
 
 wait_for_healthy() {
     log_info "Waiting for service to become healthy..."
 
-    local max_attempts=60
+    local max_attempts=120
     local attempt=1
+    local last_pid=""
+    local restarts=0
+    local max_restarts=5
+    local current_pid
 
     while [ $attempt -le $max_attempts ]; do
         if systemctl is-failed --quiet "$SERVICE_NAME"; then
@@ -81,8 +85,25 @@ wait_for_healthy() {
         fi
 
         if systemctl is-active --quiet "$SERVICE_NAME"; then
+            # Track PID to detect crash-restart loops
+            current_pid=$(systemctl show -p MainPID --value "$SERVICE_NAME" 2>/dev/null || echo "")
+            if [[ -n "$last_pid" && "$last_pid" != "0" \
+               && -n "$current_pid" && "$current_pid" != "0" \
+               && "$last_pid" != "$current_pid" ]]; then
+                restarts=$((restarts + 1))
+                log_warn "Service restarted during health check (PID ${last_pid} -> ${current_pid}, #${restarts})"
+                if [[ "$restarts" -ge "$max_restarts" ]]; then
+                    echo ""
+                    log_error "Service restarted ${restarts} times during health check (crash loop)"
+                    return 1
+                fi
+            fi
+            if [[ -n "$current_pid" && "$current_pid" != "0" ]]; then
+                last_pid="$current_pid"
+            fi
+
             # Check if configured port is listening
-            if ss -tlnp 2>/dev/null | grep -q ":${MOLTBOT_PORT}\b"; then
+            if ss -tln 2>/dev/null | grep -q ":${MOLTBOT_PORT}\b"; then
                 echo ""
                 log_success "Service is healthy (${attempt}s)"
                 return 0
