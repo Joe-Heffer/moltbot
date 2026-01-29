@@ -42,7 +42,7 @@ update_moltbot() {
     # Ensure npm prefix is configured (fixes missing .npmrc from earlier installs)
     ensure_npm_prefix
 
-    # Ensure enough memory for npm install (OOM-killed on <1 GB VPS)
+    # Ensure enough memory for npm install (OOM-killed on low-memory VPS)
     ensure_swap_for_install
 
     # Update via npm (-i sources .profile which sets PATH to include .npm-global/bin)

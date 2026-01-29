@@ -56,10 +56,13 @@ detect_resources() {
     TOTAL_RAM_MB=$(awk '/^MemTotal:/ { printf "%d", $2 / 1024 }' /proc/meminfo)
     log_info "Total RAM: ${TOTAL_RAM_MB} MB"
 
-    if [[ "$TOTAL_RAM_MB" -lt 1024 ]]; then
-        log_warn "System has less than 1 GB RAM — moltbot may be unstable"
-    elif [[ "$TOTAL_RAM_MB" -lt 2048 ]]; then
-        log_warn "System has less than 2 GB RAM (recommended minimum)"
+    if [[ "$TOTAL_RAM_MB" -lt 2048 ]]; then
+        log_error "System has less than 2 GB RAM (minimum requirement)"
+        log_error "Moltbot requires at least 2 GB RAM to run reliably."
+        log_error "See: https://docs.molt.bot/help/faq"
+        exit 1
+    elif [[ "$TOTAL_RAM_MB" -lt 4096 ]]; then
+        log_warn "System has less than 4 GB RAM (recommended)"
         log_info "Applying low-memory optimizations automatically"
     fi
 
@@ -216,7 +219,7 @@ install_moltbot() {
         find "$npm_modules" -maxdepth 1 -name '.moltbot-*' -type d -exec rm -rf {} + 2>/dev/null || true
     fi
 
-    # Ensure enough memory for npm install (OOM-killed on <1 GB VPS)
+    # Ensure enough memory for npm install (OOM-killed on low-memory VPS)
     ensure_swap_for_install
 
     # Install moltbot as the moltbot user (-i loads login shell which sets HOME)

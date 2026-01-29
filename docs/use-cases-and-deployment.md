@@ -137,13 +137,12 @@ operation.
 - Ubuntu / Debian
 - RHEL / Oracle Linux
 
-**Hardware requirements:**
+**Hardware requirements** (see [official system requirements](https://docs.molt.bot/help/faq)):
 
 | RAM | MemoryMax | Node.js Heap | Notes |
 |-----|-----------|-------------|-------|
-| 1 GB | 768 MB | 512 MB | Minimum viable; consider adding swap |
-| 2 GB | 1.5 GB | 1 GB | Recommended minimum |
-| 4+ GB | 2 GB | 1.5 GB | Comfortable headroom |
+| 2 GB | 1.5 GB | 1 GB | Minimum; consider adding swap |
+| 4+ GB | 2 GB | 1.5 GB | Recommended; comfortable headroom |
 
 The installer auto-tunes resource limits based on detected RAM.
 
