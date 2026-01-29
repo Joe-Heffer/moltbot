@@ -70,14 +70,21 @@ restart_service() {
 wait_for_healthy() {
     log_info "Waiting for service to become healthy..."
 
-    local max_attempts=30
+    local max_attempts=60
     local attempt=1
 
     while [ $attempt -le $max_attempts ]; do
+        if systemctl is-failed --quiet "$SERVICE_NAME"; then
+            echo ""
+            log_error "Service entered failed state"
+            return 1
+        fi
+
         if systemctl is-active --quiet "$SERVICE_NAME"; then
             # Check if configured port is listening
             if ss -tlnp 2>/dev/null | grep -q ":${MOLTBOT_PORT}\b"; then
-                log_success "Service is healthy (attempt ${attempt}/${max_attempts})"
+                echo ""
+                log_success "Service is healthy (${attempt}s)"
                 return 0
             fi
         fi
