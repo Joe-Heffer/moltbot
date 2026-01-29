@@ -183,9 +183,35 @@ prefix=${MOLTBOT_HOME}/.npm-global
 NPMRC
     chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_HOME}/.npmrc"
 
-    # Ensure PATH includes npm global bin in profile
+    # Ensure PATH includes npm global bin in shell profiles.
+    # useradd -r (system user) skips /etc/skel, so the moltbot user may
+    # have no .profile at all.  Login shells (sudo -u moltbot -i) read
+    # .profile / .bash_profile — not .bashrc — so the PATH must be set
+    # there.  We also keep .bashrc for interactive non-login shells.
     if ! grep -q ".npm-global/bin" "${MOLTBOT_HOME}/.bashrc" 2>/dev/null; then
         echo 'export PATH="${HOME}/.npm-global/bin:${PATH}"' >> "${MOLTBOT_HOME}/.bashrc"
+    fi
+    if [[ ! -f "${MOLTBOT_HOME}/.profile" ]]; then
+        # Create a minimal .profile that mirrors the Ubuntu /etc/skel default:
+        # source .bashrc (if it exists) and set the npm-global PATH for login shells.
+        cat > "${MOLTBOT_HOME}/.profile" << 'PROFILE'
+# ~/.profile: executed by the command interpreter for login shells.
+
+# if running bash, include .bashrc if it exists
+if [ -n "$BASH_VERSION" ]; then
+    if [ -f "$HOME/.bashrc" ]; then
+        . "$HOME/.bashrc"
+    fi
+fi
+
+# set PATH so it includes user's npm global bin if it exists
+if [ -d "$HOME/.npm-global/bin" ]; then
+    PATH="$HOME/.npm-global/bin:$PATH"
+fi
+PROFILE
+        chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_HOME}/.profile"
+    elif ! grep -q ".npm-global/bin" "${MOLTBOT_HOME}/.profile" 2>/dev/null; then
+        echo 'export PATH="${HOME}/.npm-global/bin:${PATH}"' >> "${MOLTBOT_HOME}/.profile"
     fi
 
     chown -R "${MOLTBOT_USER}:${MOLTBOT_USER}" "$MOLTBOT_HOME"
