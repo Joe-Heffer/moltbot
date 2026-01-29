@@ -46,20 +46,29 @@ create_deploy_user() {
     fi
 
     # Add deploy user to sudoers for specific commands (passwordless)
-    cat > /etc/sudoers.d/moltbot-deploy << 'EOF'
+    # Resolve actual binary paths (handles /bin vs /usr/bin symlink differences)
+    SYSTEMCTL_PATH=$(command -v systemctl)
+    JOURNALCTL_PATH=$(command -v journalctl)
+    SU_PATH=$(command -v su)
+    GIT_PATH=$(command -v git)
+    MKDIR_PATH=$(command -v mkdir)
+    CHMOD_PATH=$(command -v chmod)
+
+    cat > /etc/sudoers.d/moltbot-deploy << EOF
 # Allow deploy user to manage moltbot service and run deploy scripts
-deploy ALL=(ALL) NOPASSWD: /bin/systemctl start moltbot-gateway
-deploy ALL=(ALL) NOPASSWD: /bin/systemctl stop moltbot-gateway
-deploy ALL=(ALL) NOPASSWD: /bin/systemctl restart moltbot-gateway
-deploy ALL=(ALL) NOPASSWD: /bin/systemctl status moltbot-gateway
-deploy ALL=(ALL) NOPASSWD: /bin/systemctl is-active moltbot-gateway
-deploy ALL=(ALL) NOPASSWD: /bin/journalctl -u moltbot-gateway *
+deploy ALL=(ALL) NOPASSWD: ${SYSTEMCTL_PATH} start moltbot-gateway
+deploy ALL=(ALL) NOPASSWD: ${SYSTEMCTL_PATH} stop moltbot-gateway
+deploy ALL=(ALL) NOPASSWD: ${SYSTEMCTL_PATH} restart moltbot-gateway
+deploy ALL=(ALL) NOPASSWD: ${SYSTEMCTL_PATH} status moltbot-gateway *
+deploy ALL=(ALL) NOPASSWD: ${SYSTEMCTL_PATH} is-active moltbot-gateway
+deploy ALL=(ALL) NOPASSWD: ${SYSTEMCTL_PATH} daemon-reload
+deploy ALL=(ALL) NOPASSWD: ${JOURNALCTL_PATH} -u moltbot-gateway *
 deploy ALL=(ALL) NOPASSWD: /opt/moltbot-deploy/deploy/install.sh
 deploy ALL=(ALL) NOPASSWD: /opt/moltbot-deploy/deploy/update.sh
-deploy ALL=(ALL) NOPASSWD: /usr/bin/git *
-deploy ALL=(ALL) NOPASSWD: /bin/mkdir -p /opt/moltbot-deploy
-deploy ALL=(ALL) NOPASSWD: /bin/chmod *
-deploy ALL=(ALL) NOPASSWD: /bin/su - moltbot *
+deploy ALL=(ALL) NOPASSWD: ${GIT_PATH} *
+deploy ALL=(ALL) NOPASSWD: ${MKDIR_PATH} -p /opt/moltbot-deploy
+deploy ALL=(ALL) NOPASSWD: ${CHMOD_PATH} *
+deploy ALL=(ALL) NOPASSWD: ${SU_PATH} - moltbot *
 EOF
 
     chmod 440 /etc/sudoers.d/moltbot-deploy
