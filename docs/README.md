@@ -22,6 +22,7 @@ Welcome to the Moltbot documentation. This directory contains guides for use cas
   - Skills ecosystem overview
 
 ### Running Moltbot
+- **[Gateway UI Setup](./GATEWAY_UI.md)** - Access and configure the web interface
 - **[Deployment Options](./DEPLOYMENT.md)** - Choose the right setup for you
   - Linux VPS (recommended for production)
   - DigitalOcean 1-Click marketplace image
@@ -81,6 +82,7 @@ docs/
 ├── DEPLOYMENT.md                  (deployment options)
 ├── SECURITY.md                    (security hardening)
 ├── COMMUNITY_APPLICATIONS.md      (community examples)
+├── GATEWAY_UI.md                  (gateway web interface setup)
 ├── COST_EXPECTATIONS.md           (pricing information)
 └── use-cases-and-deployment.md    (legacy combined file - deprecated)
 ```

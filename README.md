@@ -189,6 +189,8 @@ Once running, access the Gateway UI at:
 http://<your-vm-ip>:18789
 ```
 
+For full setup instructions including firewall configuration, secure remote access, and troubleshooting, see the [Gateway UI Setup Guide](docs/GATEWAY_UI.md).
+
 For secure remote access, consider using [Tailscale Serve/Funnel](https://docs.molt.bot/gateway/tailscale).
 
 ## Security Recommendations
