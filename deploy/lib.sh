@@ -46,3 +46,53 @@ validate_port() {
         exit 1
     fi
 }
+
+# Temporary swap support for low-memory systems
+# npm install can exceed available RAM on small VPS instances (<1 GB),
+# causing the OOM killer to SIGKILL the process.  These helpers create
+# a temporary swap file before the install and clean it up afterwards.
+
+readonly LIB_INSTALL_MIN_MEMORY_MB=2048
+readonly LIB_TEMP_SWAP_FILE="/var/tmp/moltbot-install.swap"
+
+# Create and activate a temporary swap file if RAM + existing swap is
+# below LIB_INSTALL_MIN_MEMORY_MB.  Safe to call as a no-op when there
+# is already enough memory.
+ensure_swap_for_install() {
+    local total_ram_mb
+    total_ram_mb=$(awk '/^MemTotal:/ { printf "%d", $2 / 1024 }' /proc/meminfo)
+
+    local total_swap_mb
+    total_swap_mb=$(awk '/^SwapTotal:/ { printf "%d", $2 / 1024 }' /proc/meminfo)
+
+    local total_mb=$(( total_ram_mb + total_swap_mb ))
+
+    if [[ "$total_mb" -ge "$LIB_INSTALL_MIN_MEMORY_MB" ]]; then
+        return 0
+    fi
+
+    local needed_mb=$(( LIB_INSTALL_MIN_MEMORY_MB - total_mb ))
+    # Minimum 512 MB swap to leave comfortable headroom
+    if [[ "$needed_mb" -lt 512 ]]; then
+        needed_mb=512
+    fi
+
+    log_info "Low memory detected (${total_mb} MB total). Creating ${needed_mb} MB temporary swap file..."
+
+    dd if=/dev/zero of="$LIB_TEMP_SWAP_FILE" bs=1M count="$needed_mb" status=none
+    chmod 600 "$LIB_TEMP_SWAP_FILE"
+    mkswap "$LIB_TEMP_SWAP_FILE" > /dev/null
+    swapon "$LIB_TEMP_SWAP_FILE"
+
+    log_success "Temporary swap activated (${needed_mb} MB)"
+}
+
+# Remove the temporary swap file if it is active.
+# Safe to call even if no swap was created.
+remove_temp_swap() {
+    if [[ -f "$LIB_TEMP_SWAP_FILE" ]]; then
+        swapoff "$LIB_TEMP_SWAP_FILE" 2>/dev/null || true
+        rm -f "$LIB_TEMP_SWAP_FILE"
+        log_info "Temporary swap file removed"
+    fi
+}

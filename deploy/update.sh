@@ -30,11 +30,16 @@ update_moltbot() {
     CURRENT_VERSION=$(get_current_version)
     log_info "Current version: ${CURRENT_VERSION}"
 
+    # Ensure enough memory for npm install (OOM-killed on <1 GB VPS)
+    ensure_swap_for_install
+
     # Update via npm
     sudo -u "$MOLTBOT_USER" -i bash -c '
         export PATH="${HOME}/.npm-global/bin:${PATH}"
         npm install -g moltbot@beta
     '
+
+    remove_temp_swap
 
     NEW_VERSION=$(get_current_version)
     log_success "Updated to version: ${NEW_VERSION}"

@@ -25,6 +25,8 @@ NODE_HEAP_SIZE=""
 INSTALL_PHASE=""
 
 cleanup_on_failure() {
+    # Always clean up temporary swap, even on failure
+    remove_temp_swap
     if [[ -n "$INSTALL_PHASE" ]]; then
         log_error "Installation failed during phase: ${INSTALL_PHASE}"
         log_error "The system may be in a partially configured state."
@@ -201,11 +203,16 @@ install_moltbot() {
         find "$npm_modules" -maxdepth 1 -name '.moltbot-*' -type d -exec rm -rf {} + 2>/dev/null || true
     fi
 
+    # Ensure enough memory for npm install (OOM-killed on <1 GB VPS)
+    ensure_swap_for_install
+
     # Install moltbot as the moltbot user (-i loads login shell which sets HOME)
     # Use @beta tag: the @latest (v0.1.0) tag is a placeholder package
     # missing the "bin" field, so npm creates no executable.
     # See https://github.com/moltbot/moltbot/issues/3787
     sudo -u "$MOLTBOT_USER" -i npm install -g moltbot@beta
+
+    remove_temp_swap
 
     # Verify binary was installed to the correct location
     if [[ ! -x "${MOLTBOT_HOME}/.npm-global/bin/moltbot" ]]; then
