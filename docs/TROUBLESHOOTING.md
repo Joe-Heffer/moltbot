@@ -24,6 +24,69 @@ sudo systemctl status moltbot-gateway
 
 ## Common Issues
 
+### "access not configured" reply on Telegram
+
+**Symptom:** You message the bot on Telegram and it replies:
+
+```
+Moltbot: access not configured.
+
+Your Telegram user id: 123456789
+
+Pairing code: abc123
+
+Ask the bot owner to approve with:
+moltbot pairing approve telegram <code>
+```
+
+**Cause:** The default `DM_POLICY=pairing` setting requires the bot owner to approve every new contact before they can use the bot.
+
+**Fix:** Approve the pairing code via the CLI:
+
+```bash
+sudo -u moltbot -i moltbot pairing approve <channel> <code>
+```
+
+Replace `<channel>` and `<code>` with the values from the bot's message. After approval, the user can chat normally. See the [Telegram Setup Guide](./TELEGRAM_SETUP.md#step-5-approve-the-pairing-request) for details.
+
+> If the command fails, see the next section.
+
+### Pairing CLI does not recognise Telegram channel
+
+**Symptom:** You run the approve command and get one of:
+
+```
+Error: Channel telegram does not support pairing
+```
+
+```
+Error: Channel required. Use --channel <channel> or pass it as the first argument (expected one of: )
+```
+
+The `(expected one of: )` list is empty — no channels are registered for pairing.
+
+**Cause:** This is a known bug in Moltbot v2026.1.27-beta.1. The Telegram bot sends a pairing prompt, but the `moltbot pairing` CLI does not register Telegram as a supported pairing channel, so there is no way to approve the code.
+
+**Workaround:** Set `DM_POLICY=open` to bypass pairing entirely:
+
+```bash
+sudo -u moltbot nano /home/moltbot/.config/moltbot/.env
+```
+
+Set or add:
+
+```
+DM_POLICY=open
+```
+
+Then restart:
+
+```bash
+sudo systemctl restart moltbot-gateway
+```
+
+The bot will now respond to all Telegram messages without requiring approval. Switch back to `DM_POLICY=pairing` once a fixed version is released. See the [Telegram Setup Guide](./TELEGRAM_SETUP.md#workaround-set-dm_policyopen) for details.
+
 ### "Missing config" crash loop
 
 **Symptom:** The service starts, runs for ~15 seconds, then exits. The journal shows:
