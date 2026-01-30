@@ -82,35 +82,31 @@ the bot will respond to them. This prevents strangers from using your bot if
 they discover its Telegram username.
 
 When someone messages the bot for the first time, the bot replies with a
-**pairing code**. To approve access, SSH into your server and run:
+**pairing code** and a suggested CLI command. To approve access, SSH into
+your server and run:
 
 ```bash
-sudo -u moltbot -i moltbot pairing approve <code>
+sudo -u moltbot -i moltbot pairing approve <channel> <code>
 ```
 
-Replace `<code>` with the pairing code shown in Telegram. The user can now
-chat with the bot normally.
+Replace `<channel>` with the channel identifier and `<code>` with the
+pairing code shown in Telegram.
 
-> **Note:** The bot's reply may suggest including a channel name in the
-> command (e.g. `moltbot pairing approve telegram <code>`). The pairing code
-> is unique across all channels, so you only need to pass the code itself.
-> If you see `Channel telegram does not support pairing`, drop the channel
-> name and run the command above instead. See the
-> [Troubleshooting Guide](./TROUBLESHOOTING.md#channel-does-not-support-pairing-error)
-> for details.
+> **Known issue (v2026.1.27-beta.1):** The `moltbot pairing` CLI does not
+> currently register Telegram as a pairing channel. Running the command
+> produces `Channel telegram does not support pairing` or
+> `expected one of: ` (empty list). Until a fix is released, use
+> `DM_POLICY=open` as a workaround — see
+> [Workaround: set DM_POLICY=open](#workaround-set-dm_policyopen) below
+> and the [Troubleshooting Guide](./TROUBLESHOOTING.md#pairing-cli-does-not-recognise-telegram-channel).
 
 ### Managing paired contacts
 
-List all approved contacts:
+Once the pairing CLI supports Telegram, you can manage contacts with:
 
 ```bash
 sudo -u moltbot -i moltbot pairing list
-```
-
-Revoke a previously approved contact:
-
-```bash
-sudo -u moltbot -i moltbot pairing revoke <user-id>
+sudo -u moltbot -i moltbot pairing approve <channel> <code>
 ```
 
 To see all available pairing subcommands and options:
@@ -119,14 +115,16 @@ To see all available pairing subcommands and options:
 sudo -u moltbot -i moltbot pairing --help
 ```
 
-### Skipping pairing (not recommended)
+### Workaround: set DM_POLICY=open
 
-If you want any Telegram user to be able to message the bot without approval,
-set `DM_POLICY=open` in the environment file:
+Until the pairing CLI supports Telegram, set `DM_POLICY=open` so the bot
+responds to all incoming messages without approval:
 
 ```bash
 sudo -u moltbot nano /home/moltbot/.config/moltbot/.env
 ```
+
+Set or add:
 
 ```
 DM_POLICY=open
@@ -138,9 +136,11 @@ Then restart the service:
 sudo systemctl restart moltbot-gateway
 ```
 
-> **Warning:** Setting `DM_POLICY=open` allows anyone who finds your bot to
-> interact with it. Only use this for testing or bots that are intentionally
-> public.
+Message your bot on Telegram again — it should now respond normally.
+
+> **Warning:** `DM_POLICY=open` allows anyone who discovers your bot's
+> Telegram username to interact with it. Switch back to `pairing` once a
+> fixed version of Moltbot is released.
 
 ## Security Notes
 
