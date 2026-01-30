@@ -35,6 +35,11 @@ Welcome to the Moltbot documentation. This directory contains guides for use cas
   - Security best practices
   - Hardening recommendations
 
+- **[Telegram Setup](./TELEGRAM_SETUP.md)** - Connect Moltbot to Telegram via BotFather
+  - Creating a bot and obtaining a token
+  - Configuring the token on your server
+  - Security considerations
+
 - **[WhatsApp Legal & ToS](./WHATSAPP_LEGAL.md)** - WhatsApp Terms of Service considerations
   - Unofficial automation risks and account bans
   - Official Business API vs unofficial libraries
@@ -94,6 +99,7 @@ docs/
 ├── SECURITY.md                    (security hardening)
 ├── COMMUNITY_APPLICATIONS.md      (community examples)
 ├── GATEWAY_UI.md                  (gateway web interface setup)
+├── TELEGRAM_SETUP.md              (Telegram bot setup guide)
 ├── WHATSAPP_LEGAL.md              (WhatsApp ToS and legal considerations)
 ├── TROUBLESHOOTING.md             (common issues and fixes)
 ├── COST_EXPECTATIONS.md           (pricing information)
