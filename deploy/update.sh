@@ -161,8 +161,8 @@ show_status() {
 }
 
 run_doctor() {
-    log_info "Running moltbot doctor..."
-    sudo -u "$MOLTBOT_USER" -i moltbot doctor 2>/dev/null || true
+    log_info "Running moltbot doctor --repair..."
+    sudo -u "$MOLTBOT_USER" -i moltbot doctor --repair 2>/dev/null || true
 }
 
 main() {
@@ -177,6 +177,7 @@ main() {
     restart_service
 
     if wait_for_healthy; then
+        run_doctor
         show_status
         log_success "Update completed successfully"
     else
