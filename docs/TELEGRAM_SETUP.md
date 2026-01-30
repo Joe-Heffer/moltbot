@@ -85,11 +85,19 @@ When someone messages the bot for the first time, the bot replies with a
 **pairing code**. To approve access, SSH into your server and run:
 
 ```bash
-sudo -u moltbot -i moltbot pairing approve telegram <code>
+sudo -u moltbot -i moltbot pairing approve <code>
 ```
 
 Replace `<code>` with the pairing code shown in Telegram. The user can now
 chat with the bot normally.
+
+> **Note:** The bot's reply may suggest including a channel name in the
+> command (e.g. `moltbot pairing approve telegram <code>`). The pairing code
+> is unique across all channels, so you only need to pass the code itself.
+> If you see `Channel telegram does not support pairing`, drop the channel
+> name and run the command above instead. See the
+> [Troubleshooting Guide](./TROUBLESHOOTING.md#channel-does-not-support-pairing-error)
+> for details.
 
 ### Managing paired contacts
 
@@ -102,7 +110,13 @@ sudo -u moltbot -i moltbot pairing list
 Revoke a previously approved contact:
 
 ```bash
-sudo -u moltbot -i moltbot pairing revoke telegram <user-id>
+sudo -u moltbot -i moltbot pairing revoke <user-id>
+```
+
+To see all available pairing subcommands and options:
+
+```bash
+sudo -u moltbot -i moltbot pairing --help
 ```
 
 ### Skipping pairing (not recommended)

@@ -44,10 +44,41 @@ moltbot pairing approve telegram <code>
 **Fix:** SSH into your server and approve the pairing code:
 
 ```bash
-sudo -u moltbot -i moltbot pairing approve telegram <code>
+sudo -u moltbot -i moltbot pairing approve <code>
 ```
 
 Replace `<code>` with the code shown in Telegram. After approval, the user can chat normally. See the [Telegram Setup Guide](./TELEGRAM_SETUP.md#step-5-approve-the-pairing-request) for details on managing paired contacts.
+
+> **Note:** The bot's reply includes a channel name in the suggested command
+> (`moltbot pairing approve telegram <code>`). Omit the channel name — the
+> code alone is sufficient. See the next section if you get a
+> "does not support pairing" error.
+
+### "Channel does not support pairing" error
+
+**Symptom:** You run the pairing command exactly as the bot suggests and get:
+
+```
+Error: Channel telegram does not support pairing
+```
+
+**Cause:** The bot's pairing message includes the channel name (`telegram`) in the suggested command, but the CLI does not accept a channel argument for the `approve` subcommand. The pairing code is unique across all channels, so the channel name is not needed.
+
+**Fix:** Drop the channel name and pass only the code:
+
+```bash
+# Wrong — includes channel name
+sudo -u moltbot -i moltbot pairing approve telegram <code>
+
+# Correct — code only
+sudo -u moltbot -i moltbot pairing approve <code>
+```
+
+If you are unsure which arguments the CLI expects, run:
+
+```bash
+sudo -u moltbot -i moltbot pairing approve --help
+```
 
 ### "Missing config" crash loop
 
