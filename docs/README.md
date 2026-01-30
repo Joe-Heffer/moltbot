@@ -35,6 +35,12 @@ Welcome to the Moltbot documentation. This directory contains guides for use cas
   - Security best practices
   - Hardening recommendations
 
+- **[WhatsApp Legal & ToS](./WHATSAPP_LEGAL.md)** - WhatsApp Terms of Service considerations
+  - Unofficial automation risks and account bans
+  - Official Business API vs unofficial libraries
+  - 2025-2026 AI chatbot policy changes
+  - Platform comparison (Discord, Telegram, Slack, Signal)
+
 - **[Troubleshooting](./TROUBLESHOOTING.md)** - Common issues and how to fix them
   - Missing config crash loop
   - Health check failures
@@ -88,6 +94,7 @@ docs/
 ├── SECURITY.md                    (security hardening)
 ├── COMMUNITY_APPLICATIONS.md      (community examples)
 ├── GATEWAY_UI.md                  (gateway web interface setup)
+├── WHATSAPP_LEGAL.md              (WhatsApp ToS and legal considerations)
 ├── TROUBLESHOOTING.md             (common issues and fixes)
 ├── COST_EXPECTATIONS.md           (pricing information)
 └── use-cases-and-deployment.md    (legacy combined file - deprecated)
