@@ -49,10 +49,31 @@ jobs:
             echo "--- Applying Fixes ---"
             sudo su - ${{ env.MOLTBOT_USER }} -c "moltbot security audit --fix"
 
+            # The --fix flag skips chmod on symlinks for safety.
+            # Resolve the symlink (if any) and harden the state dir ourselves.
+            echo ""
+            echo "--- Hardening State Directory ---"
+            STATE_DIR="/home/${{ env.MOLTBOT_USER }}/.clawdbot"
+            if [ -L "$STATE_DIR" ]; then
+              REAL_DIR=$(readlink -f "$STATE_DIR")
+              echo "State dir is symlink -> ${REAL_DIR}; fixing permissions on resolved path"
+              sudo chmod 700 "$REAL_DIR"
+            elif [ -d "$STATE_DIR" ]; then
+              sudo chmod 700 "$STATE_DIR"
+            fi
+
             # Re-run deep audit to confirm clean state
             echo ""
             echo "--- Verification Audit ---"
-            sudo su - ${{ env.MOLTBOT_USER }} -c "moltbot security audit --deep"
+            AUDIT_OUTPUT=$(sudo su - ${{ env.MOLTBOT_USER }} -c "moltbot security audit --deep" 2>&1)
+            echo "$AUDIT_OUTPUT"
+
+            # Fail the workflow if any CRITICAL findings remain
+            if echo "$AUDIT_OUTPUT" | grep -q "CRITICAL"; then
+              echo ""
+              echo "FAIL: Critical security findings remain after remediation"
+              exit 1
+            fi
 
             echo ""
             echo "=== Security Audit Complete ==="

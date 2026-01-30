@@ -14,7 +14,7 @@ Environment=NODE_OPTIONS=--max-old-space-size=1536
 Environment=PATH=/home/moltbot/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
 Environment=HOME=/home/moltbot
 EnvironmentFile=-/home/moltbot/.config/moltbot/.env
-ExecStartPre=/bin/sh -c 'echo "moltbot-gateway: pre-start checks..." && test -x /home/moltbot/.npm-global/bin/moltbot || { echo "FATAL: /home/moltbot/.npm-global/bin/moltbot not found or not executable"; exit 1; } && test -f /home/moltbot/.config/moltbot/.env || echo "WARN: /home/moltbot/.config/moltbot/.env not found, running without env file" && mkdir -p /home/moltbot/.clawdbot'
+ExecStartPre=/bin/sh -c 'echo "moltbot-gateway: pre-start checks..." && test -x /home/moltbot/.npm-global/bin/moltbot || { echo "FATAL: /home/moltbot/.npm-global/bin/moltbot not found or not executable"; exit 1; } && test -f /home/moltbot/.config/moltbot/.env || echo "WARN: /home/moltbot/.config/moltbot/.env not found, running without env file" && mkdir -p /home/moltbot/.clawdbot && chmod 700 /home/moltbot/.clawdbot'
 ExecStart=/home/moltbot/.npm-global/bin/moltbot gateway --port 18789
 Restart=always
 RestartSec=10
