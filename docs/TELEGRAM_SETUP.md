@@ -142,6 +142,23 @@ Message your bot on Telegram again — it should now respond normally.
 > Telegram username to interact with it. Switch back to `pairing` once a
 > fixed version of Moltbot is released.
 
+## Telegram Uses Chat IDs, Not Phone Numbers
+
+Telegram bots identify users by a numeric **chat ID** (e.g., `123456789`), not
+by phone number. If you pass a phone number like `+447901234567` as a Telegram
+target, you will get an error:
+
+```
+Unknown target "+44790..." for Telegram. Hint: <chatId>
+```
+
+To find your chat ID, send any message to your bot — the pairing prompt
+includes your Telegram user id. Use that numeric id wherever a Telegram target
+is required (e.g., in `DM_ALLOWLIST` or when calling the `message` tool).
+
+See the [Troubleshooting Guide](./TROUBLESHOOTING.md#unknown-target-phone-number-error-on-telegram)
+for details.
+
 ## Security Notes
 
 - The `.env` file lives at `/home/moltbot/.config/moltbot/.env` with `600` permissions, so only the `moltbot` system user can read it.

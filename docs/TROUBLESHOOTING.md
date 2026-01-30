@@ -87,6 +87,32 @@ sudo systemctl restart moltbot-gateway
 
 The bot will now respond to all Telegram messages without requiring approval. Switch back to `DM_POLICY=pairing` once a fixed version is released. See the [Telegram Setup Guide](./TELEGRAM_SETUP.md#workaround-set-dm_policyopen) for details.
 
+### "Unknown target" phone number error on Telegram
+
+**Symptom:** Moltbot returns an error when trying to send a Telegram message:
+
+```json
+{
+  "status": "error",
+  "tool": "message",
+  "error": "Unknown target \"+44790...\" for Telegram. Hint: <chatId>"
+}
+```
+
+**Cause:** Telegram bots identify users by numeric **chat ID**, not by phone number. Phone numbers cannot be used as a target for the Telegram Bot API. If you configured a contact or allowlist entry using a phone number (e.g., `+447901234567`), Telegram will not be able to resolve it.
+
+**Fix:** Use the numeric Telegram chat ID instead of a phone number. To find your chat ID:
+
+1. Open your bot in Telegram and send it any message.
+2. The bot replies with a pairing prompt that includes your **Telegram user id** (e.g., `123456789`).
+3. Use that numeric ID wherever a Telegram target is required (e.g., in `DM_ALLOWLIST` or tool calls).
+
+If you already have a conversation with the bot, you can also find your chat ID by checking the service logs:
+
+```bash
+sudo journalctl -u moltbot-gateway -n 50 --no-pager | grep -i "chat"
+```
+
 ### "Missing config" crash loop
 
 **Symptom:** The service starts, runs for ~15 seconds, then exits. The journal shows:
