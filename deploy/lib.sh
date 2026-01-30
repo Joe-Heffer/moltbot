@@ -109,9 +109,13 @@ remove_temp_swap() {
 #   1. V8 gets enough room to handle spikes without heap OOM.
 #   2. systemd MemoryMax leaves headroom for native overhead so the
 #      cgroup OOM-killer doesn't fire before V8 can GC.
+# Set by compute_memory_limits(), read by sourcing scripts (install.sh, update.sh)
+# shellcheck disable=SC2034
 LIB_NODE_HEAP_SIZE=""
+# shellcheck disable=SC2034
 LIB_MEMORY_MAX=""
 
+# shellcheck disable=SC2034
 compute_memory_limits() {
     local total_ram_mb
     total_ram_mb=$(awk '/^MemTotal:/ { printf "%d", $2 / 1024 }' /proc/meminfo)

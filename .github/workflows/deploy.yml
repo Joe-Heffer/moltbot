@@ -73,6 +73,9 @@ jobs:
             # Make scripts executable
             chmod +x deploy/*.sh
 
+            # Disable errexit so diagnostics always run, even on failure
+            set +e
+
             # Execute based on action
             case "$ACTION" in
               install)
@@ -88,13 +91,27 @@ jobs:
                 sudo systemctl restart moltbot-gateway
                 ;;
             esac
+            DEPLOY_EXIT=$?
 
-            # Show status
+            set -e
+
+            # Always show status (even on failure, for diagnostics)
             echo ""
-            echo "=== Deployment Complete ==="
-            sudo systemctl status moltbot-gateway || true
+            echo "=== Deployment Status ==="
+            sudo systemctl status moltbot-gateway --no-pager || true
             echo ""
             sudo su - ${{ env.MOLTBOT_USER }} -c "moltbot --version" || echo "Moltbot not yet installed"
+
+            # On failure, dump recent logs to help debug
+            if [ "$DEPLOY_EXIT" -ne 0 ]; then
+              echo ""
+              echo "=== Deploy failed (exit $DEPLOY_EXIT) — recent service logs ==="
+              sudo journalctl -u moltbot-gateway -n 50 --no-pager || true
+              exit "$DEPLOY_EXIT"
+            fi
+
+            echo ""
+            echo "=== Deployment Complete ==="
 
   health-check:
     name: Health Check
