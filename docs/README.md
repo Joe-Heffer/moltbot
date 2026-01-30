@@ -35,6 +35,11 @@ Welcome to the Moltbot documentation. This directory contains guides for use cas
   - Security best practices
   - Hardening recommendations
 
+- **[Troubleshooting](./TROUBLESHOOTING.md)** - Common issues and how to fix them
+  - Missing config crash loop
+  - Health check failures
+  - OOM kills and low-memory fixes
+
 - **[Cost Expectations](./COST_EXPECTATIONS.md)** - Pricing and budget planning
 
 ## Deployment Quick Start
@@ -83,6 +88,7 @@ docs/
 ├── SECURITY.md                    (security hardening)
 ├── COMMUNITY_APPLICATIONS.md      (community examples)
 ├── GATEWAY_UI.md                  (gateway web interface setup)
+├── TROUBLESHOOTING.md             (common issues and fixes)
 ├── COST_EXPECTATIONS.md           (pricing information)
 └── use-cases-and-deployment.md    (legacy combined file - deprecated)
 ```
