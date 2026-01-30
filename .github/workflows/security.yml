@@ -39,15 +39,24 @@ jobs:
 
             echo "=== Moltbot Security Audit ==="
 
+            # Use absolute path — the moltbot user's login shell may not
+            # have ~/.npm-global/bin in PATH (useradd -r skips /etc/skel,
+            # and non-interactive login shells may not source .profile).
+            MOLTBOT_BIN="/home/${{ env.MOLTBOT_USER }}/.npm-global/bin/moltbot"
+            if [ ! -x "$MOLTBOT_BIN" ]; then
+              echo "FAIL: moltbot binary not found at $MOLTBOT_BIN"
+              exit 1
+            fi
+
             # Run deep audit first to surface all findings
             echo ""
             echo "--- Deep Audit ---"
-            sudo su - ${{ env.MOLTBOT_USER }} -c "moltbot security audit --deep"
+            sudo -u ${{ env.MOLTBOT_USER }} "$MOLTBOT_BIN" security audit --deep
 
             # Apply safe automated fixes
             echo ""
             echo "--- Applying Fixes ---"
-            sudo su - ${{ env.MOLTBOT_USER }} -c "moltbot security audit --fix"
+            sudo -u ${{ env.MOLTBOT_USER }} "$MOLTBOT_BIN" security audit --fix
 
             # The --fix flag skips chmod on symlinks for safety.
             # Resolve the symlink (if any) and harden the state dir ourselves.
@@ -65,7 +74,7 @@ jobs:
             # Re-run deep audit to confirm clean state
             echo ""
             echo "--- Verification Audit ---"
-            AUDIT_OUTPUT=$(sudo su - ${{ env.MOLTBOT_USER }} -c "moltbot security audit --deep" 2>&1)
+            AUDIT_OUTPUT=$(sudo -u ${{ env.MOLTBOT_USER }} "$MOLTBOT_BIN" security audit --deep 2>&1)
             echo "$AUDIT_OUTPUT"
 
             # Fail the workflow if any CRITICAL findings remain
