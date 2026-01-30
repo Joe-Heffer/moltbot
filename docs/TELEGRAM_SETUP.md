@@ -2,7 +2,7 @@
 
 Connect Moltbot to Telegram so you can chat with your assistant from any Telegram client.
 
-> **Official guide:** <https://docs.openclaw.ai/channels/telegram>
+> **Official guide:** <https://docs.molt.bot/channels/telegram>
 > — covers features, group chat options, and advanced configuration.
 
 ## Prerequisites
@@ -49,9 +49,84 @@ sudo journalctl -u moltbot-gateway -n 20 --no-pager
 
 ## Step 4: Test the Connection
 
-Open your new bot in Telegram and send a message. Moltbot should respond within a few seconds.
+Open your new bot in Telegram and send a message. If this is the first time
+you are messaging the bot, you will see a **pairing prompt** instead of a
+normal reply:
 
-If it does not, check the journal logs above for errors — the most common issue is a mistyped token.
+```
+Moltbot: access not configured.
+
+Your Telegram user id: 123456789
+
+Pairing code: abc123
+
+Ask the bot owner to approve with:
+moltbot pairing approve telegram <code>
+```
+
+This is expected — see Step 5 below.
+
+If you do not receive any reply at all, check the journal logs for errors:
+
+```bash
+sudo journalctl -u moltbot-gateway -n 20 --no-pager
+```
+
+The most common cause is a mistyped bot token.
+
+## Step 5: Approve the Pairing Request
+
+Moltbot ships with `DM_POLICY=pairing` enabled by default (see
+[Security Guide](./SECURITY.md)). Every new contact must be approved before
+the bot will respond to them. This prevents strangers from using your bot if
+they discover its Telegram username.
+
+When someone messages the bot for the first time, the bot replies with a
+**pairing code**. To approve access, SSH into your server and run:
+
+```bash
+sudo -u moltbot -i moltbot pairing approve telegram <code>
+```
+
+Replace `<code>` with the pairing code shown in Telegram. The user can now
+chat with the bot normally.
+
+### Managing paired contacts
+
+List all approved contacts:
+
+```bash
+sudo -u moltbot -i moltbot pairing list
+```
+
+Revoke a previously approved contact:
+
+```bash
+sudo -u moltbot -i moltbot pairing revoke telegram <user-id>
+```
+
+### Skipping pairing (not recommended)
+
+If you want any Telegram user to be able to message the bot without approval,
+set `DM_POLICY=open` in the environment file:
+
+```bash
+sudo -u moltbot nano /home/moltbot/.config/moltbot/.env
+```
+
+```
+DM_POLICY=open
+```
+
+Then restart the service:
+
+```bash
+sudo systemctl restart moltbot-gateway
+```
+
+> **Warning:** Setting `DM_POLICY=open` allows anyone who finds your bot to
+> interact with it. Only use this for testing or bots that are intentionally
+> public.
 
 ## Security Notes
 
@@ -61,6 +136,6 @@ If it does not, check the journal logs above for errors — the most common issu
 
 ## Further Reading
 
-- [Official Telegram channel docs](https://docs.openclaw.ai/channels/telegram) — full feature reference and advanced options
+- [Official Telegram channel docs](https://docs.molt.bot/channels/telegram) — full feature reference and advanced options
 - [Telegram Bot API documentation](https://core.telegram.org/bots/api)
 - [Environment template](../deploy/moltbot.env.template) — all available environment variables
