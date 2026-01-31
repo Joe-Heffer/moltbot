@@ -102,6 +102,34 @@ ssh -L 18789:127.0.0.1:18789 user@your-vm-ip
 
 Then visit `http://localhost:18789` in your browser. The gateway traffic is encrypted through the SSH connection.
 
+#### SSH Config File
+
+To avoid typing the tunnel flags every time, add an entry to your local `~/.ssh/config` file:
+
+```
+Host moltbot
+  Hostname <ip-address>
+  User <user>
+  IdentityFile ~/.ssh/moltbot
+  IdentitiesOnly yes
+  # This maps your local port 18789 to the remote port 18789
+  LocalForward 127.0.0.1:18789 localhost:18789
+  # Optional: keeps the connection alive
+  ServerAliveInterval 60
+  # Force IPv4 to avoid the [::1] bind error
+  AddressFamily inet
+```
+
+Replace `<ip-address>` with your VPS public IP and `<user>` with your SSH username. The `IdentityFile` line assumes you have a dedicated SSH key at `~/.ssh/moltbot`; adjust the path if your key is elsewhere.
+
+With this in place, connect and forward the gateway port in one command:
+
+```bash
+ssh moltbot
+```
+
+Then visit `http://localhost:18789` in your browser as usual.
+
 ### Reverse Proxy
 
 Place the gateway behind a reverse proxy (nginx, Caddy) with TLS termination for HTTPS access. See the official documentation for configuration examples: [Gateway security](https://docs.molt.bot/gateway/security).
