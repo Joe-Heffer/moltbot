@@ -39,6 +39,67 @@ If you are running Moltbot locally, use:
 http://localhost:18789
 ```
 
+## Authentication
+
+The Gateway UI is protected by a token. The onboarding wizard (`moltbot onboard`) generates this token automatically and stores it in the Moltbot config file at `~/.clawdbot/moltbot.json` under the key `gateway.auth.token`.
+
+### Finding Your Token
+
+Retrieve the token with:
+
+```bash
+sudo -u moltbot -i cat ~/.clawdbot/moltbot.json | jq -r '.gateway.auth.token'
+```
+
+If you don't have `jq` installed, you can read the full config and look for the `gateway.auth.token` value:
+
+```bash
+sudo -u moltbot -i cat ~/.clawdbot/moltbot.json
+```
+
+The relevant section looks like:
+
+```json
+{
+  "gateway": {
+    "auth": {
+      "mode": "token",
+      "token": "your-token-here"
+    }
+  }
+}
+```
+
+### Using Your Token
+
+There are two ways to authenticate with the Gateway UI:
+
+1. **URL parameter** — append the token as a query parameter:
+   ```
+   http://<your-vm-ip>:18789?token=YOUR_TOKEN
+   ```
+2. **Dashboard entry** — open the Gateway UI, go to **Overview > Gateway Access**, paste the token, and click **Connect**.
+
+### Generating a New Token
+
+If the token was not generated during onboarding or you need to regenerate it, use the built-in doctor command:
+
+```bash
+sudo -u moltbot -i moltbot doctor
+```
+
+The doctor will detect that `gateway.auth` is missing and offer to generate a token. You can also set a token via environment variable by adding this to `/home/moltbot/.config/moltbot/.env`:
+
+```bash
+MOLTBOT_GATEWAY_TOKEN=your-token-here
+```
+
+Then restart the service:
+
+```bash
+sudo systemctl restart moltbot-gateway
+```
+
 ## Configuration
 
 ### Port and Bind Address
