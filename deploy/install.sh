@@ -165,7 +165,7 @@ create_moltbot_user() {
     mkdir -p "${MOLTBOT_HOME}/.npm-global"
     mkdir -p "${MOLTBOT_HOME}/.clawdbot"
     chmod 700 "${MOLTBOT_HOME}/.clawdbot"
-    mkdir -p "${MOLTBOT_HOME}/clawd"
+    mkdir -p "${MOLTBOT_HOME}/clawd/memory"
     chmod 700 "${MOLTBOT_HOME}/clawd"
 
     # Set npm global prefix for the moltbot user
@@ -274,7 +274,7 @@ Environment=NODE_OPTIONS=--max-old-space-size=${NODE_HEAP_SIZE}
 Environment=PATH=${MOLTBOT_HOME}/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
 Environment=HOME=${MOLTBOT_HOME}
 EnvironmentFile=-${MOLTBOT_CONFIG_DIR}/.env
-ExecStartPre=+/bin/sh -c 'mkdir -p ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd && chown ${MOLTBOT_USER}:${MOLTBOT_USER} ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd && chmod 700 ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd'
+ExecStartPre=+/bin/sh -c 'mkdir -p ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd/memory && chown -R ${MOLTBOT_USER}:${MOLTBOT_USER} ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd && chmod 700 ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd'
 ExecStartPre=/bin/sh -c 'echo "moltbot-gateway: pre-start checks..." && test -x ${MOLTBOT_HOME}/.npm-global/bin/moltbot || { echo "FATAL: ${MOLTBOT_HOME}/.npm-global/bin/moltbot not found or not executable"; exit 1; } && test -f ${MOLTBOT_CONFIG_DIR}/.env || echo "WARN: ${MOLTBOT_CONFIG_DIR}/.env not found, running without env file"'
 ExecStart=${MOLTBOT_HOME}/.npm-global/bin/moltbot gateway --port ${MOLTBOT_PORT}
 Restart=always
