@@ -56,3 +56,25 @@ There is no build step or test suite — this is a scripts-and-docs repository.
 - **Service**: `moltbot-gateway` systemd unit on port 18789
 - **Security**: `NoNewPrivileges`, `ProtectSystem=strict`, `ProtectHome=read-only`, dedicated user
 - **Low-memory**: Auto-tunes `MemoryMax` and `--max-old-space-size`; temporary swap for installs on <4 GB RAM; minimum 2 GB RAM enforced by installer
+
+## Official Documentation Links
+
+For solving problems and understanding OpenClaw/Moltbot features, refer to the official documentation:
+
+### Core Resources
+- **[OpenClaw Documentation](https://docs.openclaw.ai/)** — Main documentation hub (index, architecture, configuration reference)
+- **[OpenClaw GitHub](https://github.com/openclaw/openclaw)** — Source code, issues, and discussions
+- **[OpenClaw Website](https://openclaw.ai/)** — Product overview and features
+
+### Relevant Documentation Sections
+- **[Gateway UI Guide](https://docs.openclaw.ai/)** — Browser control panel (chat, config, nodes, sessions)
+- **[Channel Configuration](https://docs.openclaw.ai/)** — WhatsApp, Telegram, Discord, Slack, Signal, iMessage, Teams, Matrix, and other channel setup
+- **[Installation & Onboarding](https://docs.openclaw.ai/)** — Global npm install, configuration, service management
+- **[Architecture Overview](https://docs.openclaw.ai/)** — Gateway + protocol model, design patterns
+- **[Configuration Reference](https://docs.openclaw.ai/)** — Complete environment variables and settings
+
+### Related Deployment Guides
+- **[README.md](README.md)** — Quick start and deployment instructions
+- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — Multi-platform deployment options
+- **[docs/SECURITY.md](docs/SECURITY.md)** — Security hardening and risk assessment
+- **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** — Common issues and solutions

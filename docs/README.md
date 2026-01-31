@@ -2,10 +2,15 @@
 
 Welcome to the Moltbot documentation. This directory contains guides for use cases, deployment options, security, community applications, and cost information.
 
+## Official Documentation
+
+The primary source for OpenClaw/Moltbot documentation is:
+- **[OpenClaw Documentation](https://docs.openclaw.ai)** — Main documentation hub with index, architecture, installation, and configuration reference
+
 ## Quick Links
 
 ### Getting Started
-- **[Official Documentation](https://docs.molt.bot/start/getting-started)** - Complete getting started guide
+- **[Official Getting Started Guide](https://docs.openclaw.ai)** - Complete installation and onboarding
 - **[Deployment Guide](./DEPLOYMENT.md)** - How to deploy Moltbot across different platforms
 
 ### Understanding Moltbot

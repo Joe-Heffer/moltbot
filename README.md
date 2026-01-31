@@ -9,8 +9,9 @@ Deployment scripts and configuration for running [Moltbot](https://molt.bot) (fo
 
 Moltbot is a personal AI assistant that runs on your own hardware. It connects to messaging platforms you already use (WhatsApp, Telegram, Slack, Discord, etc.) and can perform tasks, manage your calendar, browse the web, organize files, and run terminal commands.
 
-- **Documentation**: https://docs.molt.bot
-- **GitHub**: https://github.com/moltbot/moltbot
+- **Official Documentation**: https://docs.openclaw.ai
+- **Moltbot Documentation**: https://docs.molt.bot
+- **GitHub**: https://github.com/openclaw/openclaw
 
 ## Prerequisites
 
