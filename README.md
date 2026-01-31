@@ -228,6 +228,26 @@ For secure remote access, consider using [Tailscale Serve/Funnel](https://docs.m
 
 6. **Isolate the VM**: Run moltbot on a dedicated VM that doesn't contain sensitive data
 
+## Public or Private Repository?
+
+This repository is safe to make **public**. It contains only generic deployment scripts, systemd configuration, and documentation — no secrets, credentials, or server-specific details. API keys and SSH credentials are loaded from `.env` files (excluded by `.gitignore`) or GitHub Actions encrypted secrets, never from committed files.
+
+That said, consider the trade-offs before deciding:
+
+**Reasons to keep it public:**
+
+- **No secrets in the repo.** All credentials (API keys, SSH keys, hostnames) live in `.env` files or GitHub Actions secrets, not in version-controlled code. The `.env.template` contains only empty placeholders.
+- **Community benefit.** Others deploying Moltbot can reuse and improve these scripts. Public visibility also invites bug reports, security audits, and contributions.
+- **Security through obscurity is not a defence.** The deployment patterns here (systemd hardening, SSH-based CI/CD, dedicated service user) are standard. Hiding them does not make your server safer; properly configuring them does.
+
+**Reasons to keep it private:**
+
+- **Reduces reconnaissance surface.** A public repo reveals your deployment architecture: CI/CD tooling, systemd sandbox boundaries, sudoers policy, default ports, and directory paths. An attacker who knows you run this stack can tailor their approach, even though no single detail is a vulnerability on its own.
+- **Operational privacy.** If you prefer not to publicly associate your GitHub account with a specific service running on your infrastructure, a private repo avoids that link.
+- **Fork-specific customisations.** If you add server-specific configuration (IP ranges, internal hostnames, custom firewall rules) to your fork, those details should not be public. A private repo prevents accidental exposure.
+
+**Recommendation:** If you use this repo as-is (without adding server-specific details), public is fine. If you fork it and customise it with details specific to your infrastructure, make the fork private or keep those changes in `.env` files and gitignored overlays.
+
 ## Low-Memory VPS
 
 The minimum RAM for running Moltbot is 2 GB (see [official system requirements](https://docs.molt.bot/help/faq)). Systems with 1 GB RAM do not have enough memory for the Node.js runtime, V8 heap, and channel connections combined — the OOM killer will terminate the gateway under normal operation.
