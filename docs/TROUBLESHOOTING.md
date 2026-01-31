@@ -150,7 +150,7 @@ sudo systemctl restart moltbot-gateway
 
 ### Service fails health check after update
 
-**Symptom:** `update.sh` reports:
+**Symptom:** `deploy.sh` reports:
 
 ```
 [ERROR] Service failed to become healthy after 120 seconds
@@ -178,7 +178,7 @@ sudo dmesg | grep -i "oom\|killed process" | tail -5
 
 ### Service restart loop (PID keeps changing)
 
-**Symptom:** The update script shows repeated warnings:
+**Symptom:** The deploy script shows repeated warnings:
 
 ```
 [WARN] Service restarted during health check (PID 35807 -> 35998, #1)
@@ -195,20 +195,20 @@ sudo journalctl -u moltbot-gateway --since "5 minutes ago" --no-pager
 
 ### `export: '-g' not a valid identifier`
 
-**Symptom:** Running `sudo bash update.sh` prints:
+**Symptom:** Running `sudo bash deploy.sh` prints:
 
 ```
 bash: line 1: export: `-g': not a valid identifier
 bash: line 1: export: `moltbot@beta': not a valid identifier
 ```
 
-**Cause:** An older version of `update.sh` passed the npm install arguments incorrectly. This was fixed in [PR #34](https://github.com/Joe-Heffer/moltbot/pull/34).
+**Cause:** An older version of the deploy script passed the npm install arguments incorrectly. This was fixed in [PR #34](https://github.com/Joe-Heffer/moltbot/pull/34).
 
 **Fix:** Pull the latest version of the deploy scripts:
 
 ```bash
 cd ~/moltbot && git pull
-sudo bash deploy/update.sh
+sudo bash deploy/deploy.sh
 ```
 
 ### OOM kill during npm install
@@ -217,7 +217,7 @@ sudo bash deploy/update.sh
 
 **Cause:** The VPS has less than 4 GB RAM and npm exhausts available memory during installation.
 
-**Fix:** The install and update scripts automatically create temporary swap on low-memory systems (< 2 GB RAM + swap). If this still fails:
+**Fix:** The deploy script automatically creates temporary swap on low-memory systems (< 2 GB RAM + swap). If this still fails:
 
 ```bash
 # Manually add swap
@@ -226,8 +226,8 @@ sudo chmod 600 /swapfile
 sudo mkswap /swapfile
 sudo swapon /swapfile
 
-# Then retry the update
-sudo bash deploy/update.sh
+# Then retry the deployment
+sudo bash deploy/deploy.sh
 
 # Optionally remove swap afterward
 sudo swapoff /swapfile

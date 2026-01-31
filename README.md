@@ -30,8 +30,8 @@ OpenClaw is a personal AI assistant that runs on your own hardware. It connects 
 git clone https://github.com/Joe-Heffer/moltbot.git
 cd moltbot
 
-# Run the installation script
-sudo ./deploy/install.sh
+# Run the deployment script
+sudo ./deploy/deploy.sh
 
 # Run onboarding as the moltbot user
 sudo -u moltbot -i moltbot onboard
@@ -41,28 +41,29 @@ sudo systemctl start moltbot-gateway
 sudo systemctl enable moltbot-gateway
 ```
 
-## Installation Details
+## Deployment Details
 
-The `install.sh` script performs the following:
+The `deploy.sh` script is idempotent — it handles both first-time installation and subsequent updates. On every run it:
 
 1. Installs system dependencies (curl, git, gcc, etc.)
 2. Installs Node.js 22 via NodeSource repository
 3. Creates a dedicated `moltbot` user for security
-4. Installs moltbot globally via npm
-5. Configures a systemd service for automatic startup
+4. Installs or updates moltbot globally via npm
+5. Regenerates the systemd service (so configuration changes always propagate)
 6. Opens port 18789 in the firewall (if firewalld is active)
 7. Sets up AI provider fallback configuration (automatic retry on failures)
+
+If the service was already running (i.e. this is an update), it restarts the service, runs a health check, and executes `moltbot doctor --repair`. On first install, it prints onboarding instructions instead.
 
 ## Directory Structure
 
 ```
 deploy/
-├── install.sh              # Main installation script
-├── update.sh               # Update script for CI/CD
+├── deploy.sh               # Idempotent deployment script (install + update)
 ├── setup-server.sh         # One-time server preparation for CI/CD
 ├── uninstall.sh            # Removal script
 ├── configure-fallbacks.sh  # AI provider fallback configuration script
-├── lib.sh                  # Shared library functions
+├── lib.sh                  # Shared library (logging, validation, memory tuning)
 ├── moltbot-gateway.service # Systemd service file (reference)
 ├── moltbot.env.template    # Environment variable template
 └── moltbot.fallbacks.json  # AI provider fallback configuration
@@ -123,8 +124,7 @@ Go to `Actions` > `Deploy to VPS` > `Run workflow` and choose:
 
 | Action | Description |
 |--------|-------------|
-| `update` | Updates moltbot to latest version and restarts service |
-| `install` | Full installation (first-time setup) |
+| `deploy` | Installs or updates moltbot and regenerates all configuration |
 | `restart` | Restarts the moltbot-gateway service |
 
 ### Workflow Features
@@ -347,20 +347,10 @@ sudo -u moltbot -i moltbot doctor
 
 ## Updating OpenClaw
 
+Re-run the deployment script. It's idempotent — it will update the package, regenerate the systemd service, and restart:
+
 ```bash
-# Stop the service
-sudo systemctl stop moltbot-gateway
-
-# Update OpenClaw
-sudo -u moltbot -i npm update -g moltbot
-
-# Start the service
-sudo systemctl start moltbot-gateway
-```
-
-Or use the built-in update command:
-```bash
-sudo -u moltbot -i moltbot update --channel stable
+sudo ./deploy/deploy.sh
 ```
 
 ## Uninstalling

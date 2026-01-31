@@ -22,7 +22,7 @@ OpenClaw has full access to the host system it runs on. The official [security d
 
 7. **Docker sandboxing.** For additional isolation, wrap the agent in a hardened Docker container. See the [Composio hardening guide](https://composio.dev/blog/secure-moltbot-clawdbot-setup-composio) for a walkthrough.
 
-8. **Keep OpenClaw updated.** Run `./deploy/update.sh` or trigger the CI/CD update workflow regularly to pick up security patches.
+8. **Keep OpenClaw updated.** Run `./deploy/deploy.sh` or trigger the CI/CD deploy workflow regularly to pick up security patches.
 
 ## Further Reading
 

@@ -109,7 +109,7 @@ remove_temp_swap() {
 #   1. V8 gets enough room to handle spikes without heap OOM.
 #   2. systemd MemoryMax leaves headroom for native overhead so the
 #      cgroup OOM-killer doesn't fire before V8 can GC.
-# Set by compute_memory_limits(), read by sourcing scripts (install.sh, update.sh)
+# Set by compute_memory_limits(), read by sourcing scripts (deploy.sh)
 # shellcheck disable=SC2034
 LIB_NODE_HEAP_SIZE=""
 # shellcheck disable=SC2034

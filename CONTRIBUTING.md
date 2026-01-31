@@ -129,7 +129,7 @@ docs: clarify deployment steps in README
 For breaking changes, use `BREAKING CHANGE:` footer or suffix the type with `!`:
 
 ```
-feat!: rewrite install.sh with new structure
+feat!: rewrite deploy.sh with new structure
 
 BREAKING CHANGE: The systemd service file format has changed
 ```

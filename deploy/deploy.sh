@@ -1,7 +1,11 @@
 #!/bin/bash
 #
-# Moltbot Installation Script
-# Installs moltbot and configures it as a systemd service
+# Moltbot Deployment Script
+# Idempotent: handles both first-time installation and subsequent updates.
+# Always regenerates the systemd service so that configuration changes
+# (security hardening, resource limits, paths, etc.) are rolled out on
+# every deployment — not just on first install.
+#
 # Supports: Ubuntu/Debian and Oracle Linux/RHEL
 #
 
@@ -16,21 +20,25 @@ MOLTBOT_CONFIG_DIR="${MOLTBOT_HOME}/.config/moltbot"
 MOLTBOT_DATA_DIR="${MOLTBOT_HOME}/.local/share/moltbot"
 NODE_VERSION="22"
 MOLTBOT_PORT="${MOLTBOT_PORT:-18789}"
+SERVICE_NAME="moltbot-gateway"
 OS_FAMILY=""
 TOTAL_RAM_MB=0
 MEMORY_MAX=""
 NODE_HEAP_SIZE=""
 
-# Track installation progress for cleanup on failure
-INSTALL_PHASE=""
+# Track progress for cleanup on failure
+DEPLOY_PHASE=""
+
+# Whether the service was already running before this deployment
+SERVICE_WAS_RUNNING=false
 
 cleanup_on_failure() {
     # Always clean up temporary swap, even on failure
     remove_temp_swap
-    if [[ -n "$INSTALL_PHASE" ]]; then
-        log_error "Installation failed during phase: ${INSTALL_PHASE}"
+    if [[ -n "$DEPLOY_PHASE" ]]; then
+        log_error "Deployment failed during phase: ${DEPLOY_PHASE}"
         log_error "The system may be in a partially configured state."
-        log_error "Review the output above and re-run the installer after fixing any issues."
+        log_error "Review the output above and re-run the script after fixing any issues."
     fi
 }
 
@@ -168,10 +176,11 @@ create_moltbot_user() {
     mkdir -p "${MOLTBOT_HOME}/clawd/memory"
     chmod 700 "${MOLTBOT_HOME}/clawd"
 
-    # Set npm global prefix for the moltbot user
+    # Ensure npm prefix is configured.
     # Write .npmrc directly to avoid sudo HOME environment issues
     # (sudo -u without -H keeps caller's HOME, so npm config set
-    # would write to the wrong .npmrc)
+    # would write to the wrong .npmrc).
+    # Also fixes missing .npmrc from earlier installs.
     cat > "${MOLTBOT_HOME}/.npmrc" << NPMRC
 prefix=${MOLTBOT_HOME}/.npm-global
 NPMRC
@@ -213,7 +222,14 @@ PROFILE
 }
 
 install_moltbot() {
-    log_info "Installing moltbot..."
+    log_info "Installing/updating moltbot..."
+
+    # Show current version if already installed
+    if command -v moltbot &> /dev/null; then
+        local current_version
+        current_version=$(sudo -u "$MOLTBOT_USER" -i moltbot --version 2>/dev/null || echo "unknown")
+        log_info "Current version: ${current_version}"
+    fi
 
     # Clean up stale npm temporary directories that cause ENOTEMPTY on reinstall.
     # npm renames the existing package to a dotfile before replacing it; if a
@@ -226,10 +242,7 @@ install_moltbot() {
     # Ensure enough memory for npm install (OOM-killed on low-memory VPS)
     ensure_swap_for_install
 
-    # Install moltbot as the moltbot user (-i loads login shell which sets HOME)
-    # Use @beta tag: the @latest (v0.1.0) tag is a placeholder package
-    # missing the "bin" field, so npm creates no executable.
-    # See https://github.com/moltbot/moltbot/issues/3787
+    # Install/update moltbot as the moltbot user (-i loads login shell which sets HOME)
     sudo -u "$MOLTBOT_USER" -i npm install -g openclaw@latest
 
     remove_temp_swap
@@ -249,14 +262,17 @@ install_moltbot() {
     # PATH for all users and shell types (login, non-login, sudo without -i).
     ln -sf "${MOLTBOT_HOME}/.npm-global/bin/moltbot" /usr/local/bin/moltbot
 
-    log_success "Moltbot installed at ${MOLTBOT_HOME}/.npm-global/bin/moltbot"
-    sudo -u "$MOLTBOT_USER" -i moltbot --version || true
+    local new_version
+    new_version=$(sudo -u "$MOLTBOT_USER" -i moltbot --version 2>/dev/null || echo "unknown")
+    log_success "Moltbot version: ${new_version}"
 }
 
 setup_systemd_service() {
     log_info "Setting up systemd service..."
 
-    # Create service file with auto-tuned resource limits
+    # Always regenerate the service file so that configuration changes
+    # (security hardening, paths, environment, etc.) are rolled out on
+    # every deployment — not just on first install.
     cat > /etc/systemd/system/moltbot-gateway.service << EOF
 [Unit]
 Description=Moltbot Gateway - Personal AI Assistant
@@ -366,7 +382,85 @@ setup_model_fallbacks() {
     fi
 }
 
-print_next_steps() {
+restart_service() {
+    log_info "Restarting ${SERVICE_NAME}..."
+
+    # Stop the service and reset failure state to break any existing restart
+    # loops.  Without this, systemd may still be scheduling restarts from a
+    # previous crash cycle, and our `start` would race with those restarts.
+    systemctl stop "$SERVICE_NAME" 2>/dev/null || true
+    systemctl reset-failed "$SERVICE_NAME" 2>/dev/null || true
+
+    systemctl enable "$SERVICE_NAME"
+    systemctl start "$SERVICE_NAME"
+    log_success "Service started (clean)"
+}
+
+wait_for_healthy() {
+    log_info "Waiting for service to become healthy..."
+
+    local max_attempts=120
+    local attempt=1
+    local last_pid=""
+    local restarts=0
+    local max_restarts=5
+    local current_pid
+
+    while [ $attempt -le $max_attempts ]; do
+        if systemctl is-failed --quiet "$SERVICE_NAME"; then
+            echo ""
+            log_error "Service entered failed state"
+            return 1
+        fi
+
+        if systemctl is-active --quiet "$SERVICE_NAME"; then
+            # Track PID to detect crash-restart loops
+            current_pid=$(systemctl show -p MainPID --value "$SERVICE_NAME" 2>/dev/null || echo "")
+            if [[ -n "$last_pid" && "$last_pid" != "0" \
+               && -n "$current_pid" && "$current_pid" != "0" \
+               && "$last_pid" != "$current_pid" ]]; then
+                restarts=$((restarts + 1))
+                log_warn "Service restarted during health check (PID ${last_pid} -> ${current_pid}, #${restarts})"
+                if [[ "$restarts" -ge "$max_restarts" ]]; then
+                    echo ""
+                    log_error "Service restarted ${restarts} times during health check (crash loop)"
+                    return 1
+                fi
+            fi
+            if [[ -n "$current_pid" && "$current_pid" != "0" ]]; then
+                last_pid="$current_pid"
+            fi
+
+            # Check if configured port is listening
+            if ss -tln 2>/dev/null | grep -q ":${MOLTBOT_PORT}\b"; then
+                echo ""
+                log_success "Service is healthy (${attempt}s)"
+                return 0
+            fi
+        fi
+
+        echo -n "."
+        sleep 1
+        ((attempt++))
+    done
+
+    echo ""
+    log_error "Service failed to become healthy after ${max_attempts} seconds"
+    return 1
+}
+
+run_doctor() {
+    log_info "Running moltbot doctor --repair..."
+    sudo -u "$MOLTBOT_USER" -i moltbot doctor --repair 2>/dev/null || true
+}
+
+show_status() {
+    echo ""
+    log_info "Current status:"
+    systemctl status "$SERVICE_NAME" --no-pager -l || true
+}
+
+print_first_install_steps() {
     echo ""
     echo "=============================================="
     echo -e "${LIB_GREEN}Moltbot installation complete!${LIB_NC}"
@@ -399,43 +493,72 @@ print_next_steps() {
 }
 
 main() {
-    log_info "Starting Moltbot installation..."
+    log_info "Starting Moltbot deployment..."
     echo ""
 
     require_root
     validate_port "$MOLTBOT_PORT" "MOLTBOT_PORT"
+
+    # Check whether the service is already running (i.e. this is an update,
+    # not a first-time install).  We use this later to decide whether to
+    # restart the service or print first-install instructions.
+    if systemctl is-active --quiet "$SERVICE_NAME" 2>/dev/null; then
+        SERVICE_WAS_RUNNING=true
+    fi
+
+    DEPLOY_PHASE="OS detection"
     detect_os
 
-    INSTALL_PHASE="resource detection"
+    DEPLOY_PHASE="resource detection"
     detect_resources
 
-    INSTALL_PHASE="dependency installation"
+    DEPLOY_PHASE="dependency installation"
     install_dependencies
 
-    INSTALL_PHASE="Node.js installation"
+    DEPLOY_PHASE="Node.js installation"
     install_nodejs
 
-    INSTALL_PHASE="user creation"
+    DEPLOY_PHASE="user creation"
     create_moltbot_user
 
-    INSTALL_PHASE="moltbot installation"
+    DEPLOY_PHASE="moltbot installation"
     install_moltbot
 
-    INSTALL_PHASE="systemd setup"
+    DEPLOY_PHASE="systemd setup"
     setup_systemd_service
 
-    INSTALL_PHASE="firewall configuration"
+    DEPLOY_PHASE="firewall configuration"
     configure_firewall
 
-    INSTALL_PHASE="environment template"
+    DEPLOY_PHASE="environment template"
     copy_env_template
 
-    INSTALL_PHASE="model fallback configuration"
+    DEPLOY_PHASE="model fallback configuration"
     setup_model_fallbacks
 
-    # Clear phase — installation succeeded
-    INSTALL_PHASE=""
-    print_next_steps
+    # Clear phase — core deployment succeeded
+    DEPLOY_PHASE=""
+
+    # If the service was already running this is an update: restart and
+    # health-check.  On first install, print manual next steps instead
+    # (the user needs to run onboarding before starting the service).
+    if [[ "$SERVICE_WAS_RUNNING" == true ]]; then
+        DEPLOY_PHASE="service restart"
+        restart_service
+
+        if wait_for_healthy; then
+            run_doctor
+            show_status
+            log_success "Deployment completed successfully"
+        else
+            show_status
+            log_error "Deployment completed but service may not be healthy"
+            exit 1
+        fi
+        DEPLOY_PHASE=""
+    else
+        print_first_install_steps
+    fi
 }
 
 main "$@"

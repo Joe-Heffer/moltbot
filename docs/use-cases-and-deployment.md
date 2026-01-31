@@ -152,7 +152,7 @@ The installer auto-tunes resource limits based on detected RAM.
 ```bash
 git clone https://github.com/Joe-Heffer/moltbot.git
 cd moltbot
-sudo ./deploy/install.sh
+sudo ./deploy/deploy.sh
 ```
 
 The installer handles Node.js 22 installation, dedicated user creation,
@@ -290,7 +290,7 @@ project's RAK threat framework identify three primary risk vectors:
    [Composio hardening guide](https://composio.dev/blog/secure-moltbot-clawdbot-setup-composio)
    for a walkthrough.
 
-8. **Keep Moltbot updated.** Run `./deploy/update.sh` or trigger the CI/CD
+8. **Keep Moltbot updated.** Run `./deploy/deploy.sh` or trigger the CI/CD
    update workflow regularly to pick up security patches.
 
 For in-depth security analysis, see:

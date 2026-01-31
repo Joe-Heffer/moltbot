@@ -76,8 +76,8 @@ jobs:
 
             chmod +x deploy/*.sh
 
-            # Run the update (handles restart, health check, and doctor)
-            sudo ./deploy/update.sh
+            # Run the deployment (handles restart, health check, and doctor)
+            sudo ./deploy/deploy.sh
 
             echo ""
             echo "=== Nightly Update Complete: ${CURRENT} -> ${LATEST} ==="

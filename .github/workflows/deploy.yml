@@ -12,11 +12,10 @@ on:
       action:
         description: 'Deployment action'
         required: true
-        default: 'update'
+        default: 'deploy'
         type: choice
         options:
-          - update
-          - install
+          - deploy
           - restart
 
 concurrency:
@@ -60,8 +59,8 @@ jobs:
 
             echo "=== Moltbot Deployment Started ==="
 
-            # Determine action (from workflow_dispatch or default to update)
-            ACTION="${{ github.event.inputs.action || 'update' }}"
+            # Determine action (from workflow_dispatch or default to deploy)
+            ACTION="${{ github.event.inputs.action || 'deploy' }}"
             echo "Action: $ACTION"
 
             # Deploy directory is owned by the deploy user (created by setup-server.sh)
@@ -86,13 +85,9 @@ jobs:
 
             # Execute based on action
             case "$ACTION" in
-              install)
-                echo "Running full installation..."
-                sudo ./deploy/install.sh
-                ;;
-              update)
-                echo "Updating moltbot..."
-                sudo ./deploy/update.sh
+              deploy)
+                echo "Running deployment..."
+                sudo ./deploy/deploy.sh
                 ;;
               restart)
                 echo "Restarting service..."

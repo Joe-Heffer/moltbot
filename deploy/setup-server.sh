@@ -43,8 +43,7 @@ ${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} status moltbot-gateway --no
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} is-active moltbot-gateway
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} daemon-reload
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${journalctl_path} -u moltbot-gateway *
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: /opt/moltbot-deploy/deploy/install.sh
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: /opt/moltbot-deploy/deploy/update.sh
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: /opt/moltbot-deploy/deploy/deploy.sh
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${su_path} - moltbot -c *
 EOF
 
@@ -157,9 +156,9 @@ print_next_steps() {
     echo "   - VPS_SSH_KEY: Your SSH private key"
     echo "   - VPS_PORT: 22 (or custom SSH port)"
     echo ""
-    echo "3. Run initial install (either manually or via GitHub Actions):"
-    echo "   - Manual: sudo ${DEPLOY_PATH}/deploy/install.sh"
-    echo "   - GitHub: Trigger workflow with 'install' action"
+    echo "3. Run initial deployment (either manually or via GitHub Actions):"
+    echo "   - Manual: sudo ${DEPLOY_PATH}/deploy/deploy.sh"
+    echo "   - GitHub: Trigger 'Deploy to VPS' workflow"
     echo ""
     echo "4. Complete moltbot onboarding:"
     echo "   sudo -u moltbot -i moltbot onboard"

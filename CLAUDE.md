@@ -10,8 +10,7 @@ OpenClaw deployment repository — Bash scripts, CI/CD workflows, and documentat
 
 ```
 deploy/               Bash deployment scripts
-  install.sh          Full installation (OS deps, Node.js, user, npm, systemd, firewall)
-  update.sh           CI/CD update script
+  deploy.sh           Idempotent deployment (install + update, always regenerates systemd service)
   uninstall.sh        Removal script
   setup-server.sh     One-time CI/CD server preparation
   configure-fallbacks.sh   AI provider fallback configuration script
@@ -77,10 +76,10 @@ See [RELEASING.md](../RELEASING.md) for the complete release process, and [CONTR
 
 - **Target OS**: Ubuntu 24.04 LTS (also supports RHEL/Oracle Linux)
 - **Node.js**: v22 via NodeSource
-- **System user**: `moltbot` (non-root, created by installer)
+- **System user**: `moltbot` (non-root, created by deploy script)
 - **Service**: `moltbot-gateway` systemd unit on port 18789
 - **Security**: `NoNewPrivileges`, `ProtectSystem=strict`, `ProtectHome=read-only`, dedicated user
-- **Low-memory**: Auto-tunes `MemoryMax` and `--max-old-space-size`; temporary swap for installs on <4 GB RAM; minimum 2 GB RAM enforced by installer
+- **Low-memory**: Auto-tunes `MemoryMax` and `--max-old-space-size`; temporary swap for installs on <4 GB RAM; minimum 2 GB RAM enforced by deploy script
 
 ## Official Documentation Links
 

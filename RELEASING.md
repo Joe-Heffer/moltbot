@@ -33,7 +33,7 @@ Releases are automated using **conventional commits**. When creating commits, fo
 | `docs:` | — | `docs: clarify deployment steps in README` |
 | `chore:` | — | `chore: update yamllint config` |
 | `ci:` | — | `ci: add release workflow` |
-| `refactor:` | — | `refactor: simplify install.sh logic` |
+| `refactor:` | — | `refactor: simplify deploy.sh logic` |
 | `test:` | — | `test: add shellcheck to CI` |
 
 ### Breaking Changes

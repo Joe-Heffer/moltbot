@@ -37,7 +37,7 @@ RestrictSUIDSGID=yes
 LockPersonality=yes
 
 # Resource limits
-# NOTE: install.sh and update.sh auto-tune MemoryMax and --max-old-space-size
+# NOTE: deploy.sh auto-tunes MemoryMax and --max-old-space-size
 # based on detected system memory (see compute_memory_limits in lib.sh).
 # Formula: heap = 65% RAM (floor 256M, cap 1536M)
 #          MemoryMax = heap + 512M overhead (floor 512M, cap 2G, ≤ 90% RAM)

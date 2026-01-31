@@ -22,10 +22,10 @@ The installer auto-tunes resource limits based on detected RAM.
 ```bash
 git clone https://github.com/Joe-Heffer/moltbot.git
 cd moltbot
-sudo ./deploy/install.sh
+sudo ./deploy/deploy.sh
 ```
 
-The installer handles Node.js 22 installation, dedicated user creation, systemd service setup, firewall configuration, and resource tuning. After installation, run the onboarding wizard to configure API keys and channels.
+The deploy script handles Node.js 22 installation, dedicated user creation, systemd service setup, firewall configuration, and resource tuning. It is idempotent — safe to run for both first-time installation and subsequent updates. After first installation, run the onboarding wizard to configure API keys and channels.
 
 **CI/CD deployment:**
 
@@ -33,7 +33,7 @@ For automated deployments via GitHub Actions:
 
 1. Run `sudo ./deploy/setup-server.sh` once on the VPS to create a deploy user with limited sudo privileges.
 2. Add repository secrets: `VPS_HOST`, `VPS_USERNAME`, `VPS_SSH_KEY`, `VPS_PORT`.
-3. Push to the `main` branch or trigger the workflow manually to install, update, or restart.
+3. Push to the `main` branch or trigger the workflow manually to deploy or restart.
 
 See the project [README](../README.md) for full CI/CD instructions.
 
