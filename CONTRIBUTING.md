@@ -74,12 +74,73 @@ shellcheck deploy/*.sh
 ## Submitting Changes
 
 1. **Ensure linters pass** — ShellCheck, actionlint, and yamllint must all pass
-2. **Write clear commit messages** — Use imperative mood, include context:
-   - `Fix OOM kill during npm install on low-memory VPS`
-   - `Add use cases and deployment guide documentation`
-   - `Improve code quality, robustness, and security across deploy scripts`
+2. **Write clear commit messages** — Use conventional commits format (see below)
 3. **Open a pull request** against `main` with a description of what changed and why
 4. **Keep PRs focused** — One logical change per pull request
+
+## Conventional Commits
+
+This repository uses **conventional commits** for clear, automated release versioning. Format your commits as:
+
+```
+<type>: <description>
+
+[optional body]
+
+[optional footer]
+```
+
+### Commit Types
+
+| Type | Bumps | Purpose |
+|------|-------|---------|
+| `feat:` | MINOR | New deployment script, new workflow capability, new feature |
+| `fix:` | PATCH | Bug fixes, security hardening, script improvements |
+| `docs:` | — | Documentation updates (README, guides, comments) |
+| `chore:` | — | Config updates, dependency updates, no code changes |
+| `ci:` | — | GitHub Actions workflow changes, CI/CD improvements |
+| `refactor:` | — | Code restructuring without changing behavior |
+| `test:` | — | Adding or updating tests, linting improvements |
+
+### Examples
+
+**Feature:**
+```
+feat: add systemd hardening for moltbot service
+
+- Add ProtectSystem=strict
+- Add NoNewPrivileges=yes
+```
+
+**Bug Fix:**
+```
+fix: prevent OOM kill during npm install on low-memory VPS
+
+Increase temporary swap file size from 1GB to 2GB
+```
+
+**Documentation:**
+```
+docs: clarify deployment steps in README
+```
+
+**Breaking Change:**
+
+For breaking changes, use `BREAKING CHANGE:` footer or suffix the type with `!`:
+
+```
+feat!: rewrite install.sh with new structure
+
+BREAKING CHANGE: The systemd service file format has changed
+```
+
+or
+
+```
+feat!: change moltbot user directory structure
+```
+
+See [RELEASING.md](RELEASING.md) for more details on versioning and releases.
 
 ## Reporting Issues
 

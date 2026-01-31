@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'deploy/**'
+      - 'VERSION'
   workflow_dispatch:
     inputs:
       action:
@@ -39,6 +40,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+
+      - name: Get version
+        id: version
+        run: |
+          DEPLOY_VERSION=$(cat VERSION)
+          echo "version=$DEPLOY_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Deploying version: $DEPLOY_VERSION"
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
@@ -95,12 +103,19 @@ jobs:
 
             set -e
 
+            # Save deployment version for tracking
+            echo "Deployed version: ${{ steps.version.outputs.version }}"
+            echo "${{ steps.version.outputs.version }}" | sudo tee /opt/moltbot-version > /dev/null
+            sudo chown ${{ env.MOLTBOT_USER }}:${{ env.MOLTBOT_USER }} /opt/moltbot-version
+
             # Always show status (even on failure, for diagnostics)
             echo ""
             echo "=== Deployment Status ==="
             sudo systemctl status moltbot-gateway --no-pager || true
             echo ""
             sudo su - ${{ env.MOLTBOT_USER }} -c "moltbot --version" || echo "Moltbot not yet installed"
+            echo ""
+            echo "Repository version: ${{ steps.version.outputs.version }}"
 
             # On failure, dump recent logs to help debug
             if [ "$DEPLOY_EXIT" -ne 0 ]; then
@@ -149,6 +164,11 @@ jobs:
             else
               echo "Gateway is NOT listening"
               exit 1
+            fi
+
+            # Check deployed version
+            if [ -f /opt/moltbot-version ]; then
+              echo "Deployed version: $(cat /opt/moltbot-version)"
             fi
 
             echo "Health check passed"
