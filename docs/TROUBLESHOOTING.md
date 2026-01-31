@@ -87,6 +87,37 @@ sudo systemctl restart moltbot-gateway
 
 The bot will now respond to all Telegram messages without requiring approval. Switch back to `DM_POLICY=pairing` once a fixed version is released. See the [Telegram Setup Guide](./TELEGRAM_SETUP.md#workaround-set-dm_policyopen) for details.
 
+### "Unsupported schema node" error in Gateway UI for Telegram
+
+**Symptom:** When configuring Telegram settings in the Gateway UI web interface, you see an error message:
+
+```
+Accounts / Unsupported schema node. Use Raw mode.
+```
+
+**Cause:** This is a bug in the Gateway UI's schema-based form rendering system (tracked in [issue #57](https://github.com/Joe-Heffer/moltbot/issues/57)). The UI encounters a schema node type it doesn't know how to render for Telegram account configuration.
+
+**Workaround:** Configure Telegram directly via the environment file instead of using the Gateway UI:
+
+1. SSH into your server and edit the environment file:
+   ```bash
+   sudo -u moltbot nano /home/moltbot/.config/moltbot/.env
+   ```
+
+2. Add or uncomment the Telegram configuration:
+   ```bash
+   TELEGRAM_BOT_TOKEN=your_bot_token_here
+   ```
+
+3. Restart the service to apply changes:
+   ```bash
+   sudo systemctl restart moltbot-gateway
+   ```
+
+See the [Telegram Setup Guide](./TELEGRAM_SETUP.md) for detailed instructions on obtaining a bot token from @BotFather and configuring security settings.
+
+Alternatively, if the Gateway UI offers a "Raw mode" option for the Telegram configuration, you can click that to edit the configuration as JSON directly instead of using the form-based interface.
+
 ### "Unknown target" phone number error on Telegram
 
 **Symptom:** OpenClaw returns an error when trying to send a Telegram message:
