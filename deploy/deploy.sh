@@ -177,6 +177,18 @@ create_moltbot_user() {
     mkdir -p "$MOLTBOT_CONFIG_DIR"
     mkdir -p "$MOLTBOT_DATA_DIR"
     mkdir -p "${MOLTBOT_HOME}/.npm-global"
+
+    # Ensure state directories are real directories, not symlinks.
+    # A symlink here is a security risk: an attacker who can control the
+    # target could redirect state writes to an arbitrary location.
+    local dir
+    for dir in "${MOLTBOT_HOME}/.clawdbot" "${MOLTBOT_HOME}/clawd"; do
+        if [[ -L "$dir" ]]; then
+            log_warn "${dir} is a symlink — replacing with a real directory"
+            rm -f "$dir"
+        fi
+    done
+
     mkdir -p "${MOLTBOT_HOME}/.clawdbot"
     mkdir -p "${MOLTBOT_HOME}/clawd/memory"
 
@@ -379,7 +391,7 @@ Environment=HOMEBREW_PREFIX=${BREW_PREFIX}
 Environment=HOMEBREW_CELLAR=${BREW_PREFIX}/Cellar
 Environment=HOMEBREW_REPOSITORY=${BREW_PREFIX}/Homebrew
 EnvironmentFile=-${MOLTBOT_CONFIG_DIR}/.env
-ExecStartPre=+/bin/sh -c 'umask 0077 && mkdir -p ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd/memory && chown -R ${MOLTBOT_USER}:${MOLTBOT_USER} ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd && chmod -R 700 ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd'
+ExecStartPre=+/bin/sh -c 'for d in ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd; do if [ -L "\$d" ]; then echo "FATAL: \$d is a symlink — refusing to start (security risk)"; exit 1; fi; done && umask 0077 && mkdir -p ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd/memory && chown -R ${MOLTBOT_USER}:${MOLTBOT_USER} ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd && chmod -R 700 ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd'
 ExecStartPre=/bin/sh -c 'echo "moltbot-gateway: pre-start checks..." && test -x ${MOLTBOT_HOME}/.npm-global/bin/moltbot || { echo "FATAL: ${MOLTBOT_HOME}/.npm-global/bin/moltbot not found or not executable"; exit 1; } && test -f ${MOLTBOT_CONFIG_DIR}/.env || echo "WARN: ${MOLTBOT_CONFIG_DIR}/.env not found, running without env file"'
 ExecStart=${MOLTBOT_HOME}/.npm-global/bin/moltbot gateway --port ${MOLTBOT_PORT}
 Restart=always
@@ -540,6 +552,41 @@ wait_for_healthy() {
     return 1
 }
 
+configure_trusted_proxies() {
+    # Read GATEWAY_TRUSTED_PROXIES from the .env file (or the current
+    # environment, e.g. passed on the command line).  When set, write the
+    # value into gateway.trustedProxies so the moltbot gateway reads the
+    # real client IP from X-Forwarded-For headers behind a reverse proxy.
+    local proxies="${GATEWAY_TRUSTED_PROXIES:-}"
+    local env_file="${MOLTBOT_CONFIG_DIR}/.env"
+
+    # Fall back to the .env file if the variable is not in the environment.
+    if [[ -z "$proxies" && -f "$env_file" ]]; then
+        proxies=$(grep -E "^GATEWAY_TRUSTED_PROXIES=.+" "$env_file" 2>/dev/null \
+                  | head -1 | cut -d'=' -f2- || true)
+    fi
+
+    if [[ -z "$proxies" ]]; then
+        return 0
+    fi
+
+    log_info "Configuring gateway.trustedProxies..."
+
+    # Convert comma-separated list (e.g. "127.0.0.1,::1") into a JSON
+    # array (e.g. ["127.0.0.1","::1"]).
+    local json_array
+    json_array=$(printf '%s' "$proxies" \
+                 | tr ',' '\n' \
+                 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
+                 | jq -R . | jq -sc .)
+
+    if sudo -u "$MOLTBOT_USER" -i moltbot config set gateway.trustedProxies "$json_array" 2>/dev/null; then
+        log_success "gateway.trustedProxies set to ${json_array}"
+    else
+        log_warn "Could not set gateway.trustedProxies — configure manually with: moltbot config set gateway.trustedProxies '${json_array}'"
+    fi
+}
+
 run_doctor() {
     log_info "Running moltbot doctor --repair..."
     sudo -u "$MOLTBOT_USER" -i moltbot doctor --repair 2>/dev/null || true
@@ -629,6 +676,9 @@ main() {
 
     DEPLOY_PHASE="model fallback configuration"
     setup_model_fallbacks
+
+    DEPLOY_PHASE="trusted proxy configuration"
+    configure_trusted_proxies
 
     # Clear phase — core deployment succeeded
     DEPLOY_PHASE=""

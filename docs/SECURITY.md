@@ -22,7 +22,23 @@ OpenClaw has full access to the host system it runs on. The official [security d
 
 7. **Docker sandboxing.** For additional isolation, wrap the agent in a hardened Docker container. See the [Composio hardening guide](https://composio.dev/blog/secure-moltbot-clawdbot-setup-composio) for a walkthrough.
 
-8. **Keep OpenClaw updated.** Run `./deploy/deploy.sh` or trigger the CI/CD deploy workflow regularly to pick up security patches.
+8. **Configure trusted proxies.** If you expose the Control UI through a reverse proxy (nginx, Caddy, Tailscale), set `GATEWAY_TRUSTED_PROXIES` in your `.env` file so the gateway reads the real client IP from `X-Forwarded-For` headers. Without this, local-client checks can be spoofed through the proxy. See the `.env` template for examples.
+
+   ```bash
+   # In /home/moltbot/.config/moltbot/.env
+   GATEWAY_TRUSTED_PROXIES=127.0.0.1        # proxy on the same machine
+   GATEWAY_TRUSTED_PROXIES=100.64.0.0/10    # Tailscale CGNAT range
+   ```
+
+   The deploy script converts this into the `gateway.trustedProxies` JSON config automatically. You can also set it directly:
+
+   ```bash
+   sudo -u moltbot -i moltbot config set gateway.trustedProxies '["127.0.0.1"]'
+   ```
+
+9. **State directory integrity.** The deploy script and systemd service verify that `/home/moltbot/.clawdbot` and `/home/moltbot/clawd` are real directories, not symlinks. Symlinks in these locations are a security risk because an attacker who controls the symlink target can redirect state writes. The service refuses to start if a symlink is detected.
+
+10. **Keep OpenClaw updated.** Run `./deploy/deploy.sh` or trigger the CI/CD deploy workflow regularly to pick up security patches.
 
 ## Further Reading
 
