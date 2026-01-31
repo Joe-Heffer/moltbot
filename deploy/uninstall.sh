@@ -76,6 +76,17 @@ remove_sudoers() {
     fi
 }
 
+remove_symlink() {
+    log_info "Removing /usr/local/bin/moltbot symlink..."
+
+    if [[ -L /usr/local/bin/moltbot ]]; then
+        rm /usr/local/bin/moltbot
+        log_success "Symlink removed"
+    else
+        log_info "Symlink not found"
+    fi
+}
+
 remove_user() {
     log_info "Removing moltbot user..."
 
@@ -104,6 +115,7 @@ main() {
     remove_service
     remove_firewall_rule
     remove_sudoers
+    remove_symlink
     remove_user
 
     echo ""

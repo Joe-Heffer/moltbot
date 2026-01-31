@@ -245,6 +245,10 @@ install_moltbot() {
         exit 1
     fi
 
+    # Create a symlink in /usr/local/bin so that `moltbot` is on the default
+    # PATH for all users and shell types (login, non-login, sudo without -i).
+    ln -sf "${MOLTBOT_HOME}/.npm-global/bin/moltbot" /usr/local/bin/moltbot
+
     log_success "Moltbot installed at ${MOLTBOT_HOME}/.npm-global/bin/moltbot"
     sudo -u "$MOLTBOT_USER" -i moltbot --version || true
 }

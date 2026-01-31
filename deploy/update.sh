@@ -50,6 +50,10 @@ update_moltbot() {
 
     remove_temp_swap
 
+    # Refresh the /usr/local/bin symlink so it always points at the current
+    # binary (path is stable, but this is cheap insurance after reinstall).
+    ln -sf "/home/${MOLTBOT_USER}/.npm-global/bin/moltbot" /usr/local/bin/moltbot
+
     NEW_VERSION=$(get_current_version)
     log_success "Updated to version: ${NEW_VERSION}"
 }
