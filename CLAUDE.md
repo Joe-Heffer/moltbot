@@ -19,12 +19,15 @@ deploy/               Bash deployment scripts
   moltbot.env.template     Environment variable template
 
 .github/workflows/
-  deploy.yml          GitHub Actions: deploy to VPS via SSH
+  deploy.yml          GitHub Actions: deploy to VPS via SSH (with version tracking)
+  release.yml         GitHub Actions: create releases with semantic versioning
   lint.yml            GitHub Actions: ShellCheck, actionlint, yamllint
 
 docs/                 Extended documentation (use cases, deployment, security, costs)
 README.md             Quick start and reference
-CONTRIBUTING.md       Contribution guidelines
+CONTRIBUTING.md       Contribution guidelines (includes conventional commit format)
+RELEASING.md          Release versioning and process documentation
+VERSION               Current semantic version (e.g., 0.1.0)
 LICENSE               MIT License
 ```
 
@@ -45,8 +48,28 @@ There is no build step or test suite — this is a scripts-and-docs repository.
 - **Bash scripts**: Use `set -euo pipefail`. Source `deploy/lib.sh` for logging (`log_info`, `log_success`, `log_warn`, `log_error`) and utilities (`require_root`, `validate_port`). Support Debian/Ubuntu and RHEL-family.
 - **GitHub Actions**: Pin actions to full commit SHAs with version comments.
 - **YAML**: Lines under 200 characters. yamllint config extends `default` with relaxed `truthy` and `comments` rules.
-- **Commit messages**: Imperative mood, concise, contextual (e.g., "Fix OOM kill during npm install on low-memory VPS").
+- **Commit messages**: Use **conventional commits** format for automated versioning (see CONTRIBUTING.md and RELEASING.md):
+  - `feat:` → MINOR version bump
+  - `fix:` → PATCH version bump
+  - `docs:`, `chore:`, `ci:` → no version bump
+  - `BREAKING CHANGE:` or `!` suffix → MAJOR version bump
 - **Documentation**: Markdown in `docs/`, linked from `docs/README.md`. Keep top-level `README.md` focused.
+
+## Versioning & Releases
+
+This repository uses **semantic versioning** (MAJOR.MINOR.PATCH) starting at 0.1.0:
+
+- **VERSION file**: Single source of truth, contains current version (e.g., `0.1.0`)
+- **Git tags**: Release tags follow format `v0.1.0`, `v0.2.0`, etc.
+- **Release workflow** (`.github/workflows/release.yml`): Automated releases triggered via Actions workflow:
+  - Analyzes commits since last release using conventional commit format
+  - Auto-detects version bump (major/minor/patch)
+  - Updates VERSION file, creates git tag, generates GitHub Release
+  - Can also manually specify version bump type
+- **Deployment tracking**: Each deploy captures the VERSION from the repo and stores it on the VPS at `/opt/moltbot-version` for tracking which version is deployed
+- **Squash commits**: Use "squash and merge" on PRs to keep release history clean and aid commit analysis
+
+See [RELEASING.md](../RELEASING.md) for the complete release process, and [CONTRIBUTING.md](../CONTRIBUTING.md) for commit message format.
 
 ## Architecture Notes
 
