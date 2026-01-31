@@ -189,6 +189,24 @@ Once running, access the Gateway UI at:
 http://<your-vm-ip>:18789
 ```
 
+### Gateway Token
+
+The Gateway UI requires an authentication token. The onboarding wizard (`moltbot onboard`) generates this token automatically and stores it in the Moltbot config file.
+
+To retrieve the token:
+
+```bash
+sudo -u moltbot -i cat /home/moltbot/.moltbot/moltbot.json | jq -r '.gateway.auth.token'
+```
+
+Then open the Gateway UI with the token as a query parameter:
+
+```
+http://<your-vm-ip>:18789?token=YOUR_TOKEN
+```
+
+Or paste the token into the **Overview > Gateway Access** panel in the dashboard.
+
 For full setup instructions including firewall configuration, secure remote access, and troubleshooting, see the [Gateway UI Setup Guide](docs/GATEWAY_UI.md).
 
 For secure remote access, consider using [Tailscale Serve/Funnel](https://docs.molt.bot/gateway/tailscale).
