@@ -33,6 +33,21 @@ ensure_npm_prefix() {
     fi
 }
 
+update_homebrew() {
+    if [[ ! -x "${LIB_BREW_PREFIX}/bin/brew" ]]; then
+        log_warn "Homebrew not installed at ${LIB_BREW_PREFIX} — skipping brew update"
+        log_warn "Re-run install.sh to install Homebrew for skill dependencies"
+        return 0
+    fi
+
+    log_info "Updating Homebrew..."
+    sudo -u "$MOLTBOT_USER" -i brew update --quiet || {
+        log_warn "Homebrew update failed (non-fatal) — continuing with existing version"
+        return 0
+    }
+    log_success "Homebrew updated"
+}
+
 update_moltbot() {
     log_info "Updating moltbot..."
 
@@ -176,6 +191,7 @@ main() {
     require_root
     validate_port "$MOLTBOT_PORT" "MOLTBOT_PORT"
     check_user_exists
+    update_homebrew
     update_moltbot
     retune_service_resources
     restart_service

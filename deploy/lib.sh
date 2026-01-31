@@ -47,6 +47,10 @@ validate_port() {
     fi
 }
 
+# Homebrew (Linuxbrew) prefix — used by install/update/uninstall scripts
+# shellcheck disable=SC2034
+readonly LIB_BREW_PREFIX="/home/linuxbrew/.linuxbrew"
+
 # Temporary swap support for low-memory systems
 # npm install can exceed available RAM on small VPS instances (<4 GB),
 # causing the OOM killer to SIGKILL the process.  These helpers create

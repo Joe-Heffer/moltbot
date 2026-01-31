@@ -185,6 +185,16 @@ NPMRC
     if ! grep -q ".npm-global/bin" "${MOLTBOT_HOME}/.bashrc" 2>/dev/null; then
         echo 'export PATH="${HOME}/.npm-global/bin:${PATH}"' >> "${MOLTBOT_HOME}/.bashrc"
     fi
+    # Add Homebrew (Linuxbrew) to shell environment if installed
+    if ! grep -q "linuxbrew" "${MOLTBOT_HOME}/.bashrc" 2>/dev/null; then
+        cat >> "${MOLTBOT_HOME}/.bashrc" << 'BREWRC'
+
+# Homebrew (Linuxbrew) — required by moltbot skills
+if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
+BREWRC
+    fi
     if [[ ! -f "${MOLTBOT_HOME}/.profile" ]]; then
         # Create a minimal .profile that mirrors the Ubuntu /etc/skel default:
         # source .bashrc (if it exists) and set the npm-global PATH for login shells.
@@ -253,6 +263,44 @@ install_moltbot() {
     sudo -u "$MOLTBOT_USER" -i moltbot --version || true
 }
 
+install_homebrew() {
+    log_info "Installing Homebrew (Linuxbrew) for skill dependencies..."
+
+    if [[ -x "${LIB_BREW_PREFIX}/bin/brew" ]]; then
+        log_info "Homebrew already installed at ${LIB_BREW_PREFIX}"
+        return 0
+    fi
+
+    # Clone Homebrew core repository (shallow clone to save time and space)
+    mkdir -p "${LIB_BREW_PREFIX}"
+    git clone --depth=1 https://github.com/Homebrew/brew "${LIB_BREW_PREFIX}/Homebrew"
+
+    # Create bin directory with symlink to brew executable
+    mkdir -p "${LIB_BREW_PREFIX}/bin"
+    ln -sf ../Homebrew/bin/brew "${LIB_BREW_PREFIX}/bin/brew"
+
+    # Create standard Homebrew directory structure
+    mkdir -p "${LIB_BREW_PREFIX}/etc" \
+             "${LIB_BREW_PREFIX}/include" \
+             "${LIB_BREW_PREFIX}/lib" \
+             "${LIB_BREW_PREFIX}/opt" \
+             "${LIB_BREW_PREFIX}/sbin" \
+             "${LIB_BREW_PREFIX}/share" \
+             "${LIB_BREW_PREFIX}/var/homebrew/linked" \
+             "${LIB_BREW_PREFIX}/Cellar"
+
+    # Set ownership so moltbot user can install packages via brew
+    chown -R "${MOLTBOT_USER}:${MOLTBOT_USER}" "${LIB_BREW_PREFIX}"
+
+    # Verify installation
+    if [[ ! -x "${LIB_BREW_PREFIX}/bin/brew" ]]; then
+        log_error "Homebrew installation failed — brew binary not found"
+        exit 1
+    fi
+
+    log_success "Homebrew installed at ${LIB_BREW_PREFIX}"
+}
+
 setup_systemd_service() {
     log_info "Setting up systemd service..."
 
@@ -271,7 +319,7 @@ Group=${MOLTBOT_USER}
 WorkingDirectory=${MOLTBOT_HOME}
 Environment=NODE_ENV=production
 Environment=NODE_OPTIONS=--max-old-space-size=${NODE_HEAP_SIZE}
-Environment=PATH=${MOLTBOT_HOME}/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PATH=${MOLTBOT_HOME}/.npm-global/bin:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:/usr/local/bin:/usr/bin:/bin
 Environment=HOME=${MOLTBOT_HOME}
 EnvironmentFile=-${MOLTBOT_CONFIG_DIR}/.env
 ExecStartPre=+/bin/sh -c 'mkdir -p ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd/memory && chown -R ${MOLTBOT_USER}:${MOLTBOT_USER} ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd && chmod 700 ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd'
@@ -288,7 +336,7 @@ NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=${MOLTBOT_CONFIG_DIR} ${MOLTBOT_DATA_DIR} ${MOLTBOT_HOME}/.npm-global ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd
+ReadWritePaths=${MOLTBOT_CONFIG_DIR} ${MOLTBOT_DATA_DIR} ${MOLTBOT_HOME}/.npm-global ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd /home/linuxbrew/.linuxbrew
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectControlGroups=yes
@@ -396,6 +444,9 @@ main() {
 
     INSTALL_PHASE="user creation"
     create_moltbot_user
+
+    INSTALL_PHASE="homebrew installation"
+    install_homebrew
 
     INSTALL_PHASE="moltbot installation"
     install_moltbot

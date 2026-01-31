@@ -113,6 +113,47 @@ If you already have a conversation with the bot, you can also find your chat ID 
 sudo journalctl -u moltbot-gateway -n 50 --no-pager | grep -i "chat"
 ```
 
+### "brew not installed" when enabling skills
+
+**Symptom:** Enabling skills (e.g., openai-whisper, obsidian, github, gemini) fails with:
+
+```
+brew not installed
+```
+
+The `moltbot doctor` output lists missing skill requirements related to Homebrew.
+
+**Cause:** Some moltbot skills use Homebrew to install their dependencies. On Linux servers, Homebrew (Linuxbrew) is not available by default.
+
+**Fix:** If you installed using the deploy scripts from this repo (v0.2.0+), Homebrew is installed automatically. For older installations, re-run the installer to add Homebrew:
+
+```bash
+cd ~/moltbot && git pull
+sudo bash deploy/install.sh
+```
+
+To install Homebrew manually:
+
+```bash
+# Create the Linuxbrew directory
+sudo mkdir -p /home/linuxbrew/.linuxbrew
+sudo chown -R moltbot:moltbot /home/linuxbrew/.linuxbrew
+
+# Install Homebrew as the moltbot user
+sudo -u moltbot git clone --depth=1 https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew/Homebrew
+sudo -u moltbot mkdir -p /home/linuxbrew/.linuxbrew/bin
+sudo -u moltbot ln -sf ../Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew
+
+# Verify
+sudo -u moltbot -i brew --version
+```
+
+After installing Homebrew, restart the service and retry skill installation:
+
+```bash
+sudo systemctl restart moltbot-gateway
+```
+
 ### "Missing config" crash loop
 
 **Symptom:** The service starts, runs for ~15 seconds, then exits. The journal shows:

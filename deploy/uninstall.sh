@@ -87,6 +87,17 @@ remove_symlink() {
     fi
 }
 
+remove_homebrew() {
+    log_info "Removing Homebrew (Linuxbrew)..."
+
+    if [[ -d "$LIB_BREW_PREFIX" ]]; then
+        rm -rf "$LIB_BREW_PREFIX"
+        log_success "Homebrew removed from ${LIB_BREW_PREFIX}"
+    else
+        log_info "Homebrew not found"
+    fi
+}
+
 remove_user() {
     log_info "Removing moltbot user..."
 
@@ -116,6 +127,7 @@ main() {
     remove_firewall_rule
     remove_sudoers
     remove_symlink
+    remove_homebrew
     remove_user
 
     echo ""
