@@ -168,13 +168,23 @@ create_moltbot_user() {
         log_success "User ${MOLTBOT_USER} created"
     fi
 
-    # Create necessary directories
+    # Create necessary directories with secure permissions
+    # Set restrictive umask before creating directories to prevent world-writable files
+    local old_umask
+    old_umask=$(umask)
+    umask 0077
+
     mkdir -p "$MOLTBOT_CONFIG_DIR"
     mkdir -p "$MOLTBOT_DATA_DIR"
     mkdir -p "${MOLTBOT_HOME}/.npm-global"
     mkdir -p "${MOLTBOT_HOME}/.clawdbot"
-    chmod 700 "${MOLTBOT_HOME}/.clawdbot"
     mkdir -p "${MOLTBOT_HOME}/clawd/memory"
+
+    # Restore original umask
+    umask "$old_umask"
+
+    # Ensure restrictive permissions on sensitive directories
+    chmod 700 "${MOLTBOT_HOME}/.clawdbot"
     chmod 700 "${MOLTBOT_HOME}/clawd"
 
     # Ensure npm prefix is configured.
@@ -185,6 +195,7 @@ create_moltbot_user() {
     cat > "${MOLTBOT_HOME}/.npmrc" << NPMRC
 prefix=${MOLTBOT_HOME}/.npm-global
 NPMRC
+    chmod 644 "${MOLTBOT_HOME}/.npmrc"
     chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_HOME}/.npmrc"
 
     # Ensure PATH includes npm global bin in shell profiles.
@@ -194,6 +205,7 @@ NPMRC
     # there.  We also keep .bashrc for interactive non-login shells.
     if ! grep -q ".npm-global/bin" "${MOLTBOT_HOME}/.bashrc" 2>/dev/null; then
         echo 'export PATH="${HOME}/.npm-global/bin:${PATH}"' >> "${MOLTBOT_HOME}/.bashrc"
+        chmod 644 "${MOLTBOT_HOME}/.bashrc"
     fi
     if [[ ! -f "${MOLTBOT_HOME}/.profile" ]]; then
         # Create a minimal .profile that mirrors the Ubuntu /etc/skel default:
@@ -213,9 +225,11 @@ if [ -d "$HOME/.npm-global/bin" ]; then
     PATH="$HOME/.npm-global/bin:$PATH"
 fi
 PROFILE
+        chmod 644 "${MOLTBOT_HOME}/.profile"
         chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_HOME}/.profile"
     elif ! grep -q ".npm-global/bin" "${MOLTBOT_HOME}/.profile" 2>/dev/null; then
         echo 'export PATH="${HOME}/.npm-global/bin:${PATH}"' >> "${MOLTBOT_HOME}/.profile"
+        chmod 644 "${MOLTBOT_HOME}/.profile"
     fi
 
     # Add Homebrew (Linuxbrew) environment to shell profiles so that
@@ -229,6 +243,7 @@ if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 BREWRC
+        chmod 644 "${MOLTBOT_HOME}/.bashrc"
     fi
     if ! grep -q "linuxbrew" "${MOLTBOT_HOME}/.profile" 2>/dev/null; then
         cat >> "${MOLTBOT_HOME}/.profile" << 'BREWPROFILE'
@@ -238,6 +253,7 @@ if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 BREWPROFILE
+        chmod 644 "${MOLTBOT_HOME}/.profile"
     fi
 
     chown -R "${MOLTBOT_USER}:${MOLTBOT_USER}" "$MOLTBOT_HOME"
@@ -363,7 +379,7 @@ Environment=HOMEBREW_PREFIX=${BREW_PREFIX}
 Environment=HOMEBREW_CELLAR=${BREW_PREFIX}/Cellar
 Environment=HOMEBREW_REPOSITORY=${BREW_PREFIX}/Homebrew
 EnvironmentFile=-${MOLTBOT_CONFIG_DIR}/.env
-ExecStartPre=+/bin/sh -c 'mkdir -p ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd/memory && chown -R ${MOLTBOT_USER}:${MOLTBOT_USER} ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd && chmod 700 ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd'
+ExecStartPre=+/bin/sh -c 'umask 0077 && mkdir -p ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd/memory && chown -R ${MOLTBOT_USER}:${MOLTBOT_USER} ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd && chmod -R 700 ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd'
 ExecStartPre=/bin/sh -c 'echo "moltbot-gateway: pre-start checks..." && test -x ${MOLTBOT_HOME}/.npm-global/bin/moltbot || { echo "FATAL: ${MOLTBOT_HOME}/.npm-global/bin/moltbot not found or not executable"; exit 1; } && test -f ${MOLTBOT_CONFIG_DIR}/.env || echo "WARN: ${MOLTBOT_CONFIG_DIR}/.env not found, running without env file"'
 ExecStart=${MOLTBOT_HOME}/.npm-global/bin/moltbot gateway --port ${MOLTBOT_PORT}
 Restart=always
@@ -419,14 +435,15 @@ copy_env_template() {
 
     if [[ -f "${SCRIPT_DIR}/moltbot.env.template" ]]; then
         cp "${SCRIPT_DIR}/moltbot.env.template" "${MOLTBOT_CONFIG_DIR}/moltbot.env.template"
+        chmod 644 "${MOLTBOT_CONFIG_DIR}/moltbot.env.template"
         chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_CONFIG_DIR}/moltbot.env.template"
         log_success "Environment template copied to ${MOLTBOT_CONFIG_DIR}"
 
         # Create .env from template if it doesn't already exist
         if [[ ! -f "${MOLTBOT_CONFIG_DIR}/.env" ]]; then
             cp "${SCRIPT_DIR}/moltbot.env.template" "${MOLTBOT_CONFIG_DIR}/.env"
-            chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_CONFIG_DIR}/.env"
             chmod 600 "${MOLTBOT_CONFIG_DIR}/.env"
+            chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_CONFIG_DIR}/.env"
             log_warn "Created ${MOLTBOT_CONFIG_DIR}/.env from template — edit it to add your API keys before starting the service"
         else
             log_info "Existing .env file preserved at ${MOLTBOT_CONFIG_DIR}/.env"
@@ -436,6 +453,7 @@ copy_env_template() {
     # Copy fallback configuration template
     if [[ -f "${SCRIPT_DIR}/moltbot.fallbacks.json" ]]; then
         cp "${SCRIPT_DIR}/moltbot.fallbacks.json" "${MOLTBOT_CONFIG_DIR}/moltbot.fallbacks.json"
+        chmod 644 "${MOLTBOT_CONFIG_DIR}/moltbot.fallbacks.json"
         chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_CONFIG_DIR}/moltbot.fallbacks.json"
         log_success "Fallback configuration template copied to ${MOLTBOT_CONFIG_DIR}"
     fi
