@@ -34,6 +34,8 @@ TELEGRAM_BOT_TOKEN=123456789:ABCdefGhIjKlMnOpQrStUvWxYz
 
 The env file is loaded by the systemd service via the `EnvironmentFile` directive in `moltbot-gateway.service`. It should already have `chmod 600` permissions (set by the installer), so the token is readable only by the `moltbot` user.
 
+> **Known issue:** The Gateway UI may show an "Unsupported schema node. Use Raw mode" error when trying to configure Telegram settings ([issue #57](https://github.com/Joe-Heffer/moltbot/issues/57)). This is a UI rendering bug. The workaround is to configure Telegram via the `.env` file as shown above, rather than using the Gateway web interface. See the [Troubleshooting Guide](./TROUBLESHOOTING.md#unsupported-schema-node-error-in-gateway-ui-for-telegram) for details.
+
 ## Step 3: Restart the Service
 
 ```bash
