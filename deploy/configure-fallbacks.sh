@@ -57,15 +57,6 @@ configure_fallbacks() {
         return 0
     fi
 
-    # Get primary model configuration
-    local primary_provider
-    local primary_model
-    local primary_key
-
-    primary_provider=$(get_json_value "$FALLBACK_CONFIG" '.models.primary.provider')
-    primary_model=$(get_json_value "$FALLBACK_CONFIG" '.models.primary.model')
-    primary_key=$(get_json_value "$FALLBACK_CONFIG" '.models.primary.requiresApiKey')
-
     # Track configured models
     local configured_count=0
     local available_keys=()
