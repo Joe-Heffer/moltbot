@@ -77,7 +77,8 @@ jobs:
             chmod +x deploy/*.sh
 
             # Run the deployment (handles restart, health check, and doctor)
-            sudo ./deploy/deploy.sh
+            # Use absolute path to match sudoers configuration
+            sudo ${{ env.DEPLOY_PATH }}/deploy/deploy.sh
 
             echo ""
             echo "=== Nightly Update Complete: ${CURRENT} -> ${LATEST} ==="
