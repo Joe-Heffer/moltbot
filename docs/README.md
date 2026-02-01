@@ -1,4 +1,4 @@
-# OpenClaw Documentation
+# OpenClaw Deployment Documentation
 
 Welcome to the OpenClaw deployment documentation. This directory contains guides for getting started, configuring, securing, and troubleshooting your deployment.
 
@@ -69,32 +69,6 @@ For OpenClaw-specific features (channels, skills, architecture), refer to the of
 | **NAS/Raspberry Pi** | 20 min | Home automation | Varies |
 
 Choose your platform and follow the **[Quick Start](./QUICK_START.md)** or **[Deployment Options](./DEPLOYMENT.md)** guide.
-
-## File Structure
-
-```
-docs/
-├── README.md                          (this file - navigation hub)
-├── QUICK_START.md                     (5-min deployment guide)
-├── CONFIGURATION.md                   (AI providers, env vars, onboarding)
-├── SERVICE_MANAGEMENT.md              (systemctl, monitoring, logs)
-├── GITHUB_ACTIONS_DEPLOYMENT.md       (CI/CD setup and automation)
-├── DEPLOYMENT.md                      (multi-platform deployment options)
-├── LOW_MEMORY_VPS.md                  (2-4 GB RAM optimization)
-├── AGENT_MEMORY_BACKUP.md             (agent memory backup guide)
-├── FILE_SHARING.md                    (file sharing best practices)
-├── GATEWAY_UI.md                      (web interface setup)
-├── TELEGRAM_SETUP.md                  (Telegram bot setup)
-├── WHATSAPP_LEGAL.md                  (WhatsApp ToS and risks)
-├── SECURITY.md                        (hardening checklist)
-├── PUBLIC_VS_PRIVATE.md               (repo visibility guide)
-├── REPOSITORY_STRUCTURE.md            (repo files and scripts)
-├── TROUBLESHOOTING.md                 (common issues)
-├── USE_CASES.md                       (real-world applications)
-├── COST_EXPECTATIONS.md               (pricing guide)
-├── LOCAL_LLM_BACKUP.md                (local LLM feasibility and alternatives)
-└── COMMUNITY_APPLICATIONS.md          (community examples)
-```
 
 ## Common Commands
 
