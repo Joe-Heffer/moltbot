@@ -22,6 +22,7 @@ BACKUP_SOURCES=(
     "${OPENCLAW_HOME}/clawd/memory"
     "${OPENCLAW_HOME}/.config/openclaw"
     "${OPENCLAW_HOME}/.local/share/openclaw"
+    "${OPENCLAW_HOME}/.openclaw/credentials"
 )
 
 # Files to exclude for privacy (add patterns here)

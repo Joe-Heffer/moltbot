@@ -18,6 +18,7 @@ OPENCLAW_USER="${OPENCLAW_USER:-openclaw}"
 OPENCLAW_HOME="/home/${OPENCLAW_USER}"
 OPENCLAW_CONFIG_DIR="${OPENCLAW_HOME}/.config/openclaw"
 OPENCLAW_DATA_DIR="${OPENCLAW_HOME}/.local/share/openclaw"
+OPENCLAW_CREDENTIALS_DIR="${OPENCLAW_HOME}/.openclaw/credentials"
 NODE_VERSION="22"
 BREW_PREFIX="/home/linuxbrew/.linuxbrew"
 OPENCLAW_PORT="${OPENCLAW_PORT:-18789}"
@@ -191,6 +192,7 @@ create_openclaw_user() {
 
     mkdir -p "${OPENCLAW_HOME}/.clawdbot"
     mkdir -p "${OPENCLAW_HOME}/clawd/memory"
+    mkdir -p "${OPENCLAW_CREDENTIALS_DIR}"
 
     # Restore original umask
     umask "$old_umask"
@@ -198,6 +200,7 @@ create_openclaw_user() {
     # Ensure restrictive permissions on sensitive directories
     chmod 700 "${OPENCLAW_HOME}/.clawdbot"
     chmod 700 "${OPENCLAW_HOME}/clawd"
+    chmod 700 "${OPENCLAW_CREDENTIALS_DIR}"
 
     # Ensure npm prefix is configured.
     # Write .npmrc directly to avoid sudo HOME environment issues
