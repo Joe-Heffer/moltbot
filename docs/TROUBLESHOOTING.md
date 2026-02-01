@@ -144,6 +144,56 @@ If you already have a conversation with the bot, you can also find your chat ID 
 sudo journalctl -u moltbot-gateway -n 50 --no-pager | grep -i "chat"
 ```
 
+### "No API key found for provider 'openai-codex'" crash
+
+**Symptom:** The service crashes with an error in the journal:
+
+```
+No API key found for provider 'openai-codex'. Auth store: /home/moltbot/.clawdbot/agents/main/agent/auth-profiles.json
+```
+
+The agent crashes instead of gracefully handling the missing API key.
+
+**Cause:** OpenClaw is attempting to use the "openai-codex" provider (OpenAI's Codex API for code generation) but cannot find authentication credentials. This is an upstream bug in OpenClaw - it should gracefully fall back to another provider or skip the operation instead of crashing.
+
+**Important Notes:**
+- "openai-codex" is different from the regular "openai" provider
+- Codex is OpenAI's specialized code-generation API (used by GitHub Copilot)
+- Codex has been deprecated/limited access since 2023
+- Our deployment scripts don't configure codex by default
+
+**Workaround:** The OpenAI API key can be used for both standard OpenAI models and Codex access. Configure your OpenAI API key in the environment file:
+
+```bash
+sudo -u moltbot nano /home/moltbot/.config/moltbot/.env
+```
+
+Ensure `OPENAI_API_KEY` is set:
+
+```bash
+OPENAI_API_KEY=sk-...your_key_here...
+```
+
+Then configure the agent's auth profile to use the same key for codex:
+
+```bash
+# Run onboarding if not already done
+sudo -u moltbot -i moltbot onboard
+
+# Or manually configure the OpenAI provider
+sudo -u moltbot -i moltbot config set providers.openai.apiKey "$OPENAI_API_KEY"
+```
+
+Finally, restart the service:
+
+```bash
+sudo systemctl restart moltbot-gateway
+```
+
+**Note:** If you don't have an OpenAI API key and don't need code generation features, this is a bug that should be reported to the OpenClaw project. The agent should not crash when optional providers are unavailable.
+
+**Related Issue:** [#91](https://github.com/Joe-Heffer/moltbot/issues/91)
+
 ### "Missing config" crash loop
 
 **Symptom:** The service starts, runs for ~15 seconds, then exits. The journal shows:
