@@ -1,120 +1,145 @@
 # OpenClaw Documentation
 
-Welcome to the OpenClaw documentation. This directory contains guides for use cases, deployment options, security, community applications, and cost information.
+Welcome to the OpenClaw deployment documentation. This directory contains guides for getting started, configuring, securing, and troubleshooting your deployment.
 
-## Official Documentation
+## Quick Navigation
 
-The primary source for OpenClaw/Moltbot documentation is:
-- **[OpenClaw Documentation](https://docs.openclaw.ai)** — Main documentation hub with index, architecture, installation, and configuration reference
+### 🚀 Getting Started
+- **[Quick Start](./QUICK_START.md)** — Deploy in 5-10 minutes
+- **[Deployment Options](./DEPLOYMENT.md)** — VPS, local, Docker, NAS, and more
 
-## Quick Links
+### ⚙️ Configuration & Setup
+- **[Configuration Guide](./CONFIGURATION.md)** — AI providers, environment variables, onboarding
+- **[Service Management](./SERVICE_MANAGEMENT.md)** — Start, stop, monitor the service
+- **[Gateway UI Setup](./GATEWAY_UI.md)** — Access the web interface
+- **[Telegram Setup](./TELEGRAM_SETUP.md)** — Connect Telegram bot
+- **[WhatsApp Legal & ToS](./WHATSAPP_LEGAL.md)** — Important considerations
 
-### Getting Started
-- **[Official Documentation](https://docs.openclaw.ai/start/getting-started)** - Complete getting started guide
-- **[Deployment Guide](./DEPLOYMENT.md)** - How to deploy OpenClaw across different platforms
+### 🔄 Operations & Automation
+- **[GitHub Actions CI/CD](./GITHUB_ACTIONS_DEPLOYMENT.md)** — Automated deployment and updates
+- **[Low-Memory VPS](./LOW_MEMORY_VPS.md)** — Optimize for 2–4 GB RAM systems
+- **[Agent Memory Backup](./AGENT_MEMORY_BACKUP.md)** — Automated backups to prevent data loss
 
-### Understanding OpenClaw
-- **[Use Cases](./USE_CASES.md)** - Real-world applications and workflows
-  - Personal productivity (calendar, email, tasks)
-  - Developer and DevOps workflows
-  - Home automation and IoT
-  - Media and content management
-  - Finance and tracking
-  - Research and knowledge management
+### 🔒 Security & Hardening
+- **[Security Guide](./SECURITY.md)** — Hardening checklist and best practices
+- **[Public vs. Private Repo](./PUBLIC_VS_PRIVATE.md)** — Repository visibility considerations
 
-- **[Community Applications](./COMMUNITY_APPLICATIONS.md)** - Creative examples from the community
-  - Notable use cases and examples
-  - Skills ecosystem overview
+### 📚 Reference & Learning
+- **[Repository Structure](./REPOSITORY_STRUCTURE.md)** — Files, scripts, workflows
+- **[Troubleshooting](./TROUBLESHOOTING.md)** — Common issues and solutions
+- **[Use Cases](./USE_CASES.md)** — Real-world applications
+- **[Cost Expectations](./COST_EXPECTATIONS.md)** — Pricing and budget planning
+- **[Community Applications](./COMMUNITY_APPLICATIONS.md)** — Examples from the community
 
-### Running OpenClaw
-- **[Gateway UI Setup](./GATEWAY_UI.md)** - Access and configure the web interface
-- **[Deployment Options](./DEPLOYMENT.md)** - Choose the right setup for you
-  - Linux VPS (recommended for production)
-  - DigitalOcean 1-Click marketplace image
-  - Cloudflare Workers (serverless)
-  - Local machine (Mac, Linux, WSL2)
-  - NAS and embedded hardware
+## Recommended Reading Order
 
-- **[Security Guide](./SECURITY.md)** - Secure deployment and hardening checklist
-  - Risk assessment
-  - Security best practices
-  - Hardening recommendations
+**First time deploying?**
+1. [Quick Start](./QUICK_START.md) — Get it running
+2. [Configuration Guide](./CONFIGURATION.md) — Set up API keys
+3. [Security Guide](./SECURITY.md) — Harden your setup
 
-- **[Telegram Setup](./TELEGRAM_SETUP.md)** - Connect OpenClaw to Telegram via BotFather
-  - Creating a bot and obtaining a token
-  - Configuring the token on your server
-  - Security considerations
+**Need to automate?**
+1. [GitHub Actions CI/CD](./GITHUB_ACTIONS_DEPLOYMENT.md) — Set up GitHub Actions
+2. [Repository Structure](./REPOSITORY_STRUCTURE.md) — Understand the scripts
 
-- **[WhatsApp Legal & ToS](./WHATSAPP_LEGAL.md)** - WhatsApp Terms of Service considerations
-  - Unofficial automation risks and account bans
-  - Official Business API vs unofficial libraries
-  - 2025-2026 AI chatbot policy changes
-  - Platform comparison (Discord, Telegram, Slack, Signal)
+**Having issues?**
+1. [Troubleshooting](./TROUBLESHOOTING.md) — Find your problem
+2. [Low-Memory VPS](./LOW_MEMORY_VPS.md) — If out of memory
+3. [Service Management](./SERVICE_MANAGEMENT.md) — Monitor and debug
 
-- **[Agent Memory Backup](./AGENT_MEMORY_BACKUP.md)** - Automated backups to prevent data loss
-  - Git repository backups
-  - Cloud storage backups via rclone
-  - Privacy considerations and security
+## Official OpenClaw Documentation
 
-- **[Troubleshooting](./TROUBLESHOOTING.md)** - Common issues and how to fix them
-  - Missing config crash loop
-  - Health check failures
-  - OOM kills and low-memory fixes
+For OpenClaw-specific features (channels, skills, architecture), refer to the official documentation:
+- **[OpenClaw Documentation](https://docs.openclaw.ai)** — Main documentation hub
+- **[Channel Configuration](https://docs.openclaw.ai/channels)** — WhatsApp, Telegram, Discord, Slack, etc.
+- **[Skills Marketplace](https://docs.openclaw.ai/tools/skills)** — Discover and install skills
+- **[Architecture Overview](https://docs.openclaw.ai)** — System design and capabilities
 
-- **[Cost Expectations](./COST_EXPECTATIONS.md)** - Pricing and budget planning
-
-## Deployment Quick Start
-
-Choose your platform:
+## Deployment Quick Reference
 
 | Platform | Setup Time | Best For | Cost |
 |----------|-----------|---------|------|
-| **Linux VPS** | 10 min | Always-on, production | $4-24/mo |
-| **DigitalOcean 1-Click** | 5 min | Quick start, no config | $4-24/mo |
-| **Cloudflare Workers** | 15 min | Serverless, low-cost | ~$5/mo |
-| **Local Machine** | 5 min | Development, personal | Free |
+| **Linux VPS** | 5-10 min | Always-on, production | $4-24/mo |
+| **GitHub Actions** | 10 min | Automated updates | Free (with secrets) |
+| **DigitalOcean 1-Click** | 5 min | Quick start | $4-24/mo |
+| **Cloudflare Workers** | 15 min | Serverless | ~$5/mo |
+| **Local Machine** | 5 min | Development | Free |
 | **NAS/Raspberry Pi** | 20 min | Home automation | Varies |
 
-For detailed instructions, see [Deployment Guide](./DEPLOYMENT.md).
-
-## Community & Support
-
-- **[Awesome OpenClaw Skills](https://github.com/VoltAgent/awesome-moltbot-skills)** - 700+ community skills
-- **[Official GitHub](https://github.com/openclaw/openclaw)** - Source code and issues
-- **[Skills Marketplace](https://docs.openclaw.ai/tools/skills)** - Discover and install skills
-
-## Security First
-
-Before deploying, review the [Security Guide](./SECURITY.md) to understand risk vectors and hardening best practices.
-
-## Additional Resources
-
-- **Tutorials**
-  - [DigitalOcean quickstart](https://www.digitalocean.com/community/tutorials/moltbot-quickstart-guide)
-  - [Hostinger VPS installation](https://www.hostinger.com/support/how-to-install-moltbot-on-hostinger-vps/)
-  - [Mac Mini setup](https://beebom.com/how-to-set-up-clawdbot-moltbot-on-mac-mini/)
-
-- **Analysis & Commentary**
-  - [TechCrunch: Everything you need to know](https://techcrunch.com/2026/01/27/everything-you-need-to-know-about-viral-personal-ai-assistant-clawdbot-now-moltbot/)
-  - [DEV Community: Ultimate guide](https://dev.to/czmilo/moltbot-the-ultimate-personal-ai-assistant-guide-for-2026-d4e)
-  - [Cloudflare: Introducing Moltworker](https://blog.cloudflare.com/moltworker-self-hosted-ai-agent/)
+Choose your platform and follow the **[Quick Start](./QUICK_START.md)** or **[Deployment Options](./DEPLOYMENT.md)** guide.
 
 ## File Structure
 
 ```
 docs/
-├── README.md                      (this file - navigation hub)
-├── USE_CASES.md                   (use cases by category)
-├── DEPLOYMENT.md                  (deployment options)
-├── SECURITY.md                    (security hardening)
-├── AGENT_MEMORY_BACKUP.md         (agent memory backup guide)
-├── COMMUNITY_APPLICATIONS.md      (community examples)
-├── GATEWAY_UI.md                  (gateway web interface setup)
-├── TELEGRAM_SETUP.md              (Telegram bot setup guide)
-├── WHATSAPP_LEGAL.md              (WhatsApp ToS and legal considerations)
-├── TROUBLESHOOTING.md             (common issues and fixes)
-├── COST_EXPECTATIONS.md           (pricing information)
-└── use-cases-and-deployment.md    (legacy combined file - deprecated)
+├── README.md                          (this file - navigation hub)
+├── QUICK_START.md                     (5-min deployment guide)
+├── CONFIGURATION.md                   (AI providers, env vars, onboarding)
+├── SERVICE_MANAGEMENT.md              (systemctl, monitoring, logs)
+├── GITHUB_ACTIONS_DEPLOYMENT.md       (CI/CD setup and automation)
+├── DEPLOYMENT.md                      (multi-platform deployment options)
+├── LOW_MEMORY_VPS.md                  (2-4 GB RAM optimization)
+├── AGENT_MEMORY_BACKUP.md             (agent memory backup guide)
+├── GATEWAY_UI.md                      (web interface setup)
+├── TELEGRAM_SETUP.md                  (Telegram bot setup)
+├── WHATSAPP_LEGAL.md                  (WhatsApp ToS and risks)
+├── SECURITY.md                        (hardening checklist)
+├── PUBLIC_VS_PRIVATE.md               (repo visibility guide)
+├── REPOSITORY_STRUCTURE.md            (repo files and scripts)
+├── TROUBLESHOOTING.md                 (common issues)
+├── USE_CASES.md                       (real-world applications)
+├── COST_EXPECTATIONS.md               (pricing guide)
+└── COMMUNITY_APPLICATIONS.md          (community examples)
 ```
 
-For the canonical combined reference, see [use-cases-and-deployment.md](./use-cases-and-deployment.md).
+## Common Commands
+
+### Deploy to VPS
+```bash
+git clone https://github.com/Joe-Heffer/moltbot.git
+cd moltbot
+sudo ./deploy/deploy.sh
+```
+
+### Configure via Onboarding
+```bash
+sudo -u moltbot -i moltbot onboard
+```
+
+### Start the Service
+```bash
+sudo systemctl start moltbot-gateway
+sudo systemctl enable moltbot-gateway
+```
+
+### View Logs
+```bash
+sudo journalctl -u moltbot-gateway -f
+```
+
+### Update OpenClaw
+```bash
+cd moltbot
+git pull origin main
+sudo ./deploy/deploy.sh
+```
+
+## Need Help?
+
+- **Getting started?** → [Quick Start](./QUICK_START.md)
+- **Setting up GitHub Actions?** → [GitHub Actions CI/CD](./GITHUB_ACTIONS_DEPLOYMENT.md)
+- **Configuring API keys?** → [Configuration Guide](./CONFIGURATION.md)
+- **Service issues?** → [Service Management](./SERVICE_MANAGEMENT.md)
+- **Out of memory?** → [Low-Memory VPS](./LOW_MEMORY_VPS.md)
+- **Security concerns?** → [Security Guide](./SECURITY.md)
+- **Other problems?** → [Troubleshooting](./TROUBLESHOOTING.md)
+
+## Community & Support
+
+- **[OpenClaw GitHub Issues](https://github.com/openclaw/openclaw/issues)** — Report bugs and feature requests
+- **[OpenClaw Discussions](https://github.com/openclaw/openclaw/discussions)** — Ask questions and share ideas
+- **[Awesome Moltbot Skills](https://github.com/VoltAgent/awesome-moltbot-skills)** — 700+ community skills
+
+---
+
+**Ready to start?** Head to [Quick Start](./QUICK_START.md) or [Documentation Hub](../README.md) for an overview.

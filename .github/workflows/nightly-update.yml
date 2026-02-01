@@ -1,6 +1,6 @@
 # Nightly update workflow
-# Checks for new moltbot beta releases and deploys them automatically.
-# The beta channel tracks the latest OpenClaw nightly builds.
+# Checks for new openclaw releases and deploys them automatically.
+# Uses the stable release channel (@latest tag).
 
 name: Nightly Update
 
@@ -28,7 +28,7 @@ jobs:
     environment: production
 
     steps:
-      - name: Check for new beta version and update
+      - name: Check for new release version and update
         uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -48,17 +48,17 @@ jobs:
             fi
             echo "Installed version: ${CURRENT}"
 
-            # Get latest beta version from npm registry
-            LATEST=$(npm view moltbot@beta version 2>/dev/null || echo "unknown")
-            echo "Latest beta version: ${LATEST}"
+            # Get latest release version from npm registry
+            LATEST=$(npm view openclaw@latest version 2>/dev/null || echo "unknown")
+            echo "Latest release version: ${LATEST}"
 
             if [ "$LATEST" = "unknown" ]; then
-              echo "Could not fetch latest beta version from npm. Skipping update."
+              echo "Could not fetch latest release version from npm. Skipping update."
               exit 0
             fi
 
             if [ "$CURRENT" = "$LATEST" ]; then
-              echo "Already on latest beta (${CURRENT}). No update needed."
+              echo "Already on latest release (${CURRENT}). No update needed."
               exit 0
             fi
 
