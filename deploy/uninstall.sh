@@ -51,20 +51,6 @@ remove_service() {
     fi
 }
 
-remove_firewall_rule() {
-    log_info "Removing firewall rule..."
-
-    if systemctl is-active --quiet firewalld; then
-        if firewall-cmd --list-ports | grep -q "${MOLTBOT_PORT}/tcp"; then
-            firewall-cmd --permanent --remove-port="${MOLTBOT_PORT}/tcp"
-            firewall-cmd --reload
-            log_success "Firewall rule removed"
-        else
-            log_info "Firewall rule not found"
-        fi
-    fi
-}
-
 remove_sudoers() {
     log_info "Removing deploy sudoers rules..."
 
@@ -113,7 +99,6 @@ main() {
 
     stop_service
     remove_service
-    remove_firewall_rule
     remove_sudoers
     remove_symlink
     remove_user

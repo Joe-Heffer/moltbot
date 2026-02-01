@@ -427,21 +427,6 @@ EOF
     log_success "Systemd service configured"
 }
 
-configure_firewall() {
-    log_info "Configuring firewall..."
-
-    if systemctl is-active --quiet firewalld 2>/dev/null; then
-        firewall-cmd --permanent --add-port="${MOLTBOT_PORT}/tcp"
-        firewall-cmd --reload
-        log_success "Firewall configured via firewalld (port ${MOLTBOT_PORT} opened)"
-    elif command -v ufw &> /dev/null && ufw status | grep -q "active"; then
-        ufw allow "${MOLTBOT_PORT}/tcp"
-        log_success "Firewall configured via ufw (port ${MOLTBOT_PORT} opened)"
-    else
-        log_warn "No active firewall detected, skipping firewall configuration"
-    fi
-}
-
 copy_env_template() {
     log_info "Creating environment template..."
 
@@ -667,9 +652,6 @@ main() {
 
     DEPLOY_PHASE="systemd setup"
     setup_systemd_service
-
-    DEPLOY_PHASE="firewall configuration"
-    configure_firewall
 
     DEPLOY_PHASE="environment template"
     copy_env_template
