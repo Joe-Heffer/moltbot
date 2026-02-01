@@ -58,6 +58,12 @@ The primary source for OpenClaw/Moltbot documentation is:
 
 - **[Cost Expectations](./COST_EXPECTATIONS.md)** - Pricing and budget planning
 
+- **[Local LLM Backup Options](./LOCAL_LLM_BACKUP.md)** - Using local LLMs on CPU-only VPS
+  - Feasibility analysis for limited-resource deployments
+  - Why free API tiers are better than local LLMs on small VPS
+  - Configuration examples for Ollama on separate hardware
+  - Performance and cost comparisons
+
 ## Deployment Quick Start
 
 Choose your platform:
@@ -108,6 +114,7 @@ docs/
 ├── WHATSAPP_LEGAL.md              (WhatsApp ToS and legal considerations)
 ├── TROUBLESHOOTING.md             (common issues and fixes)
 ├── COST_EXPECTATIONS.md           (pricing information)
+├── LOCAL_LLM_BACKUP.md            (local LLM feasibility and alternatives)
 └── use-cases-and-deployment.md    (legacy combined file - deprecated)
 ```
 
