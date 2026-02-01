@@ -143,7 +143,7 @@ jobs:
           cat release_notes.md
 
       - name: Create GitHub Release
-        uses: ncipollo/release-action@6c75be85e104c6c3dee4377fb4708d3fa3da04ef # v1.14.0
+        uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
         with:
           tag: v${{ steps.next.outputs.next_version }}
           name: v${{ steps.next.outputs.next_version }}
