@@ -31,8 +31,11 @@ create_deploy_user() {
     su_path=$(command -v su)
 
     # Principle of least privilege: only allow the specific commands needed
-    # for deployment operations. Avoid broad wildcards that could enable
-    # privilege escalation.
+    # for deployment operations.
+    # Note: the deploy user owns /opt/moltbot-deploy (can modify scripts
+    # there), so a wildcard for deploy/*.sh is security-equivalent to
+    # naming individual scripts — but avoids sudoers breakage when deploy
+    # scripts are renamed.
     cat > /etc/sudoers.d/moltbot-deploy << EOF
 # Allow deploy user to manage moltbot service and run deploy scripts
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} start moltbot-gateway
@@ -43,7 +46,7 @@ ${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} status moltbot-gateway --no
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} is-active moltbot-gateway
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} daemon-reload
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${journalctl_path} -u moltbot-gateway *
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: /opt/moltbot-deploy/deploy/deploy.sh
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${DEPLOY_PATH}/deploy/*.sh
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${su_path} - moltbot -c *
 EOF
 

@@ -59,12 +59,15 @@ jobs:
 
             echo "=== Moltbot Deployment Started ==="
 
+            DEPLOY_DIR="${{ env.DEPLOY_PATH }}"
+            DEPLOY_SCRIPT="${DEPLOY_DIR}/deploy/deploy.sh"
+
             # Determine action (from workflow_dispatch or default to deploy)
             ACTION="${{ github.event.inputs.action || 'deploy' }}"
             echo "Action: $ACTION"
 
             # Deploy directory is owned by the deploy user (created by setup-server.sh)
-            cd ${{ env.DEPLOY_PATH }}
+            cd "$DEPLOY_DIR"
 
             # Clone or update the repository
             # No sudo — deploy user owns the directory
@@ -80,6 +83,24 @@ jobs:
             # Make scripts executable
             chmod +x deploy/*.sh
 
+            # Verify sudo access before attempting deployment.
+            # If setup-server.sh hasn't been (re-)run since script names
+            # changed, the sudoers rules won't match and sudo will fail
+            # with "a terminal is required to read the password".
+            if [ "$ACTION" = "deploy" ]; then
+              if ! sudo -n -l "$DEPLOY_SCRIPT" >/dev/null 2>&1; then
+                echo ""
+                echo "ERROR: Passwordless sudo is not configured for: $DEPLOY_SCRIPT"
+                echo ""
+                echo "The deploy user's sudoers rules are out of date."
+                echo "SSH into the VPS as root and re-run setup-server.sh:"
+                echo ""
+                echo "  sudo ${DEPLOY_DIR}/deploy/setup-server.sh"
+                echo ""
+                exit 1
+              fi
+            fi
+
             # Disable errexit so diagnostics always run, even on failure
             set +e
 
@@ -87,7 +108,7 @@ jobs:
             case "$ACTION" in
               deploy)
                 echo "Running deployment..."
-                sudo ./deploy/deploy.sh
+                sudo "$DEPLOY_SCRIPT"
                 ;;
               restart)
                 echo "Restarting service..."
