@@ -79,6 +79,11 @@ configure_fallbacks() {
         log_success "  Found GEMINI_API_KEY"
     fi
 
+    if has_api_key "OPENROUTER_API_KEY"; then
+        available_keys+=("OPENROUTER_API_KEY")
+        log_success "  Found OPENROUTER_API_KEY"
+    fi
+
     # If no API keys found, skip configuration
     if [[ ${#available_keys[@]} -eq 0 ]]; then
         local skip_if_no_keys

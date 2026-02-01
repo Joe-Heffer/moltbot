@@ -3,22 +3,34 @@
   "models": {
     "primary": {
       "provider": "anthropic",
-      "model": "claude-opus-4.5",
-      "description": "Anthropic Claude Opus 4.5 - Recommended for best performance",
+      "model": "claude-sonnet-4.5",
+      "description": "Anthropic Claude Sonnet 4.5 - Best balance of quality and cost",
       "requiresApiKey": "ANTHROPIC_API_KEY"
     },
     "fallbacks": [
       {
+        "provider": "google",
+        "model": "gemini-2.5-flash",
+        "description": "Google Gemini 2.5 Flash - Very fast and cost-effective",
+        "requiresApiKey": "GEMINI_API_KEY"
+      },
+      {
+        "provider": "openrouter",
+        "model": "deepseek/deepseek-r1",
+        "description": "DeepSeek R1 via OpenRouter - Strong reasoning at low cost",
+        "requiresApiKey": "OPENROUTER_API_KEY"
+      },
+      {
         "provider": "openai",
-        "model": "gpt-4",
-        "description": "OpenAI GPT-4 - High quality alternative",
+        "model": "gpt-4.1-mini",
+        "description": "OpenAI GPT-4.1 Mini - Reliable and affordable",
         "requiresApiKey": "OPENAI_API_KEY"
       },
       {
-        "provider": "google",
-        "model": "gemini-pro",
-        "description": "Google Gemini Pro - Additional fallback option",
-        "requiresApiKey": "GEMINI_API_KEY"
+        "provider": "openrouter",
+        "model": "moonshotai/kimi-k2",
+        "description": "Kimi K2 via OpenRouter - Capable open-source alternative",
+        "requiresApiKey": "OPENROUTER_API_KEY"
       }
     ]
   },
