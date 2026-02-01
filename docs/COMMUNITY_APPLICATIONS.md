@@ -1,6 +1,13 @@
 # Community Applications
 
-The OpenClaw community has produced creative applications beyond the core use cases. The [awesome-moltbot-skills](https://github.com/VoltAgent/awesome-moltbot-skills) repository catalogues 700+ skills across 28 categories.
+The OpenClaw community has produced creative applications beyond the core use cases. [ClawHub](https://www.clawhub.ai/skills) is the official skill registry for discovering, installing, and publishing skills. The [awesome-moltbot-skills](https://github.com/VoltAgent/awesome-moltbot-skills) repository also catalogues 700+ skills across 28 categories.
+
+Install skills using the ClawHub CLI (included in the deployment):
+
+```bash
+sudo -u openclaw -i clawhub search "docker"
+sudo -u openclaw -i clawhub sync
+```
 
 ## Notable Community Examples
 
@@ -33,4 +40,4 @@ The OpenClaw community has produced creative applications beyond the core use ca
 | Communication | 26 | Email, messaging, voice |
 | Search and Research | 23 | Brave Search, Exa AI, Kagi, Tavily |
 
-See the full directory at [docs.openclaw.ai/tools/skills](https://docs.openclaw.ai/tools/skills).
+Browse skills at [clawhub.ai/skills](https://www.clawhub.ai/skills) or the [full directory](https://docs.openclaw.ai/tools/skills).

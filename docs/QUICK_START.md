@@ -39,7 +39,7 @@ The wizard guides you through:
 - LLM provider selection (Anthropic, OpenAI, or Google Gemini)
 - Workspace setup
 - Channel connections (WhatsApp, Telegram, Discord, Slack, etc.)
-- Skills installation
+- Skills installation (or use the [ClawHub CLI](#install-skills) for more control)
 
 ### Manual Environment Setup (Optional)
 
@@ -89,7 +89,7 @@ For details, see [Gateway UI Setup](./GATEWAY_UI.md).
 ## What's Next?
 
 - **Connect channels**: Configure WhatsApp, Telegram, Discord, Slack, etc. (see [official channel docs](https://docs.openclaw.ai/channels))
-- **Install skills**: Explore the [Skills Marketplace](https://docs.openclaw.ai/tools/skills)
+- **Install skills**: Browse and install from [ClawHub](https://www.clawhub.ai/skills), or use the CLI: `sudo -u openclaw -i clawhub sync`
 - **Secure access**: Use [Tailscale](https://tailscale.com/) instead of exposing the port directly (see [Security Guide](./SECURITY.md))
 - **Monitor service**: View logs with `sudo journalctl -u openclaw-gateway -f`
 - **Run diagnostics**: Execute `sudo -u openclaw -i openclaw doctor`

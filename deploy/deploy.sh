@@ -427,6 +427,30 @@ install_openclaw() {
     log_success "OpenClaw version: ${new_version}"
 }
 
+install_clawhub() {
+    log_info "Installing/updating ClawHub CLI..."
+
+    # ClawHub is the official skill registry for OpenClaw.
+    # The CLI lets users search, install, and sync community skills
+    # from https://www.clawhub.ai/ into the workspace skills directory.
+
+    # Check current version if already installed
+    if sudo -u "$OPENCLAW_USER" -i command -v clawhub &>/dev/null; then
+        local current_version
+        current_version=$(sudo -u "$OPENCLAW_USER" -i clawhub --version 2>/dev/null || echo "unknown")
+        log_info "Current ClawHub CLI version: ${current_version}"
+    fi
+
+    # Install/update clawhub as the openclaw user
+    if sudo -u "$OPENCLAW_USER" -i npm install -g clawhub@latest 2>/dev/null; then
+        local new_version
+        new_version=$(sudo -u "$OPENCLAW_USER" -i clawhub --version 2>/dev/null || echo "unknown")
+        log_success "ClawHub CLI version: ${new_version}"
+    else
+        log_warn "ClawHub CLI installation failed — skills can still be installed via 'openclaw onboard'"
+    fi
+}
+
 setup_systemd_service() {
     log_info "Setting up systemd service..."
 
@@ -724,6 +748,10 @@ print_first_install_steps() {
     echo "Configuration directory: ${OPENCLAW_CONFIG_DIR}"
     echo "Data directory: ${OPENCLAW_DATA_DIR}"
     echo ""
+    echo "4. Install skills from ClawHub:"
+    echo "   sudo -u ${OPENCLAW_USER} -i clawhub sync"
+    echo "   Browse skills: https://www.clawhub.ai/skills"
+    echo ""
     echo "Security recommendations:"
     echo "  - Use Tailscale for secure remote access"
     echo "  - Configure DM pairing policies"
@@ -765,6 +793,9 @@ main() {
 
     DEPLOY_PHASE="openclaw installation"
     install_openclaw
+
+    DEPLOY_PHASE="ClawHub CLI installation"
+    install_clawhub
 
     DEPLOY_PHASE="systemd setup"
     setup_systemd_service
