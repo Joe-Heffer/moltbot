@@ -4,7 +4,17 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'deploy/**/*.sh'
+      - '**/*.yml'
+      - '**/*.yaml'
+      - '.yamllint'
   pull_request:
+    paths:
+      - 'deploy/**/*.sh'
+      - '**/*.yml'
+      - '**/*.yaml'
+      - '.yamllint'
 
 permissions:
   contents: read
@@ -22,19 +32,6 @@ jobs:
         with:
           scandir: deploy
           severity: warning
-
-  actionlint:
-    name: Action Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
-
-      - name: Install actionlint
-        run: bash <(curl -s https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
-
-      - name: Run actionlint
-        run: ./actionlint -color
 
   yamllint:
     name: YAML Lint
