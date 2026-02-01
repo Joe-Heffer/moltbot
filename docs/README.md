@@ -14,6 +14,7 @@ Welcome to the OpenClaw deployment documentation. This directory contains guides
 - **[Gateway UI Setup](./GATEWAY_UI.md)** — Access the web interface
 - **[Telegram Setup](./TELEGRAM_SETUP.md)** — Connect Telegram bot
 - **[WhatsApp Legal & ToS](./WHATSAPP_LEGAL.md)** — Important considerations
+- **[File Sharing Best Practices](./FILE_SHARING.md)** — Share files and projects with agents
 
 ### 🔄 Operations & Automation
 - **[GitHub Actions CI/CD](./GITHUB_ACTIONS_DEPLOYMENT.md)** — Automated deployment and updates
@@ -81,6 +82,7 @@ docs/
 ├── DEPLOYMENT.md                      (multi-platform deployment options)
 ├── LOW_MEMORY_VPS.md                  (2-4 GB RAM optimization)
 ├── AGENT_MEMORY_BACKUP.md             (agent memory backup guide)
+├── FILE_SHARING.md                    (file sharing best practices)
 ├── GATEWAY_UI.md                      (web interface setup)
 ├── TELEGRAM_SETUP.md                  (Telegram bot setup)
 ├── WHATSAPP_LEGAL.md                  (WhatsApp ToS and risks)
