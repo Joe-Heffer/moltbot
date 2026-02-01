@@ -177,7 +177,8 @@ EOF
     if git diff --cached --quiet; then
         log_info "No changes to commit"
     else
-        local commit_msg="Automated backup: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+        local commit_msg
+        commit_msg="Automated backup: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
         git commit -m "${commit_msg}"
 
         log_info "Pushing to remote repository"
