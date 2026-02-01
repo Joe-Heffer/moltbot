@@ -371,55 +371,25 @@ setup_systemd_service() {
     # Always regenerate the service file so that configuration changes
     # (security hardening, paths, environment, etc.) are rolled out on
     # every deployment — not just on first install.
-    cat > /etc/systemd/system/moltbot-gateway.service << EOF
-[Unit]
-Description=Moltbot Gateway - Personal AI Assistant
-Documentation=https://docs.molt.bot
-After=network-online.target
-Wants=network-online.target
 
-[Service]
-Type=simple
-User=${MOLTBOT_USER}
-Group=${MOLTBOT_USER}
-WorkingDirectory=${MOLTBOT_HOME}
-Environment=NODE_ENV=production
-Environment=NODE_OPTIONS=--max-old-space-size=${NODE_HEAP_SIZE}
-Environment=PATH=${BREW_PREFIX}/bin:${BREW_PREFIX}/sbin:${MOLTBOT_HOME}/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
-Environment=HOME=${MOLTBOT_HOME}
-Environment=HOMEBREW_PREFIX=${BREW_PREFIX}
-Environment=HOMEBREW_CELLAR=${BREW_PREFIX}/Cellar
-Environment=HOMEBREW_REPOSITORY=${BREW_PREFIX}/Homebrew
-EnvironmentFile=-${MOLTBOT_CONFIG_DIR}/.env
-ExecStartPre=+/bin/sh -c 'for d in ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd; do if [ -L "\$d" ]; then echo "FATAL: \$d is a symlink — refusing to start (security risk)"; exit 1; fi; done && umask 0077 && mkdir -p ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd/memory && chown -R ${MOLTBOT_USER}:${MOLTBOT_USER} ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd && chmod -R 700 ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd'
-ExecStartPre=/bin/sh -c 'echo "moltbot-gateway: pre-start checks..." && test -x ${MOLTBOT_HOME}/.npm-global/bin/moltbot || { echo "FATAL: ${MOLTBOT_HOME}/.npm-global/bin/moltbot not found or not executable"; exit 1; } && test -f ${MOLTBOT_CONFIG_DIR}/.env || echo "WARN: ${MOLTBOT_CONFIG_DIR}/.env not found, running without env file"'
-ExecStart=${MOLTBOT_HOME}/.npm-global/bin/moltbot gateway --port ${MOLTBOT_PORT}
-Restart=always
-RestartSec=10
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=moltbot
+    # Read the template and substitute placeholders with actual values
+    local template_file="${SCRIPT_DIR}/moltbot-gateway.service"
 
-# Security hardening
-NoNewPrivileges=yes
-PrivateTmp=yes
-ProtectSystem=strict
-ProtectHome=read-only
-ReadWritePaths=${MOLTBOT_CONFIG_DIR} ${MOLTBOT_DATA_DIR} ${MOLTBOT_HOME}/.npm-global ${MOLTBOT_HOME}/.clawdbot ${MOLTBOT_HOME}/clawd /home/linuxbrew
-ProtectKernelTunables=yes
-ProtectKernelModules=yes
-ProtectControlGroups=yes
-RestrictNamespaces=yes
-RestrictSUIDSGID=yes
-LockPersonality=yes
+    if [[ ! -f "$template_file" ]]; then
+        log_error "Service template not found: ${template_file}"
+        exit 1
+    fi
 
-# Resource limits
-LimitNOFILE=65535
-MemoryMax=${MEMORY_MAX}
-
-[Install]
-WantedBy=multi-user.target
-EOF
+    # Perform variable substitution and write to systemd directory
+    sed -e "s|{{MOLTBOT_USER}}|${MOLTBOT_USER}|g" \
+        -e "s|{{MOLTBOT_HOME}}|${MOLTBOT_HOME}|g" \
+        -e "s|{{MOLTBOT_CONFIG_DIR}}|${MOLTBOT_CONFIG_DIR}|g" \
+        -e "s|{{MOLTBOT_DATA_DIR}}|${MOLTBOT_DATA_DIR}|g" \
+        -e "s|{{NODE_HEAP_SIZE}}|${NODE_HEAP_SIZE}|g" \
+        -e "s|{{MEMORY_MAX}}|${MEMORY_MAX}|g" \
+        -e "s|{{BREW_PREFIX}}|${BREW_PREFIX}|g" \
+        -e "s|{{MOLTBOT_PORT}}|${MOLTBOT_PORT}|g" \
+        "$template_file" > /etc/systemd/system/moltbot-gateway.service
 
     # Reload systemd
     systemctl daemon-reload

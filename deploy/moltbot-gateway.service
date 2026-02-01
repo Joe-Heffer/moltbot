@@ -6,17 +6,20 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=moltbot
-Group=moltbot
-WorkingDirectory=/home/moltbot
+User={{MOLTBOT_USER}}
+Group={{MOLTBOT_USER}}
+WorkingDirectory={{MOLTBOT_HOME}}
 Environment=NODE_ENV=production
-Environment=NODE_OPTIONS=--max-old-space-size=1536
-Environment=PATH=/home/moltbot/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
-Environment=HOME=/home/moltbot
-EnvironmentFile=-/home/moltbot/.config/moltbot/.env
-ExecStartPre=+/bin/sh -c 'for d in /home/moltbot/.clawdbot /home/moltbot/clawd; do if [ -L "$d" ]; then echo "FATAL: $d is a symlink — refusing to start (security risk)"; exit 1; fi; done && umask 0077 && mkdir -p /home/moltbot/.clawdbot /home/moltbot/clawd/memory && chown -R moltbot:moltbot /home/moltbot/.clawdbot /home/moltbot/clawd && chmod -R 700 /home/moltbot/.clawdbot /home/moltbot/clawd'
-ExecStartPre=/bin/sh -c 'echo "moltbot-gateway: pre-start checks..." && test -x /home/moltbot/.npm-global/bin/moltbot || { echo "FATAL: /home/moltbot/.npm-global/bin/moltbot not found or not executable"; exit 1; } && test -f /home/moltbot/.config/moltbot/.env || echo "WARN: /home/moltbot/.config/moltbot/.env not found, running without env file"'
-ExecStart=/home/moltbot/.npm-global/bin/moltbot gateway --port 18789
+Environment=NODE_OPTIONS=--max-old-space-size={{NODE_HEAP_SIZE}}
+Environment=PATH={{BREW_PREFIX}}/bin:{{BREW_PREFIX}}/sbin:{{MOLTBOT_HOME}}/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HOME={{MOLTBOT_HOME}}
+Environment=HOMEBREW_PREFIX={{BREW_PREFIX}}
+Environment=HOMEBREW_CELLAR={{BREW_PREFIX}}/Cellar
+Environment=HOMEBREW_REPOSITORY={{BREW_PREFIX}}/Homebrew
+EnvironmentFile=-{{MOLTBOT_CONFIG_DIR}}/.env
+ExecStartPre=+/bin/sh -c 'for d in {{MOLTBOT_HOME}}/.clawdbot {{MOLTBOT_HOME}}/clawd; do if [ -L "$d" ]; then echo "FATAL: $d is a symlink — refusing to start (security risk)"; exit 1; fi; done && umask 0077 && mkdir -p {{MOLTBOT_HOME}}/.clawdbot {{MOLTBOT_HOME}}/clawd/memory && chown -R {{MOLTBOT_USER}}:{{MOLTBOT_USER}} {{MOLTBOT_HOME}}/.clawdbot {{MOLTBOT_HOME}}/clawd && chmod -R 700 {{MOLTBOT_HOME}}/.clawdbot {{MOLTBOT_HOME}}/clawd'
+ExecStartPre=/bin/sh -c 'echo "moltbot-gateway: pre-start checks..." && test -x {{MOLTBOT_HOME}}/.npm-global/bin/moltbot || { echo "FATAL: {{MOLTBOT_HOME}}/.npm-global/bin/moltbot not found or not executable"; exit 1; } && test -f {{MOLTBOT_CONFIG_DIR}}/.env || echo "WARN: {{MOLTBOT_CONFIG_DIR}}/.env not found, running without env file"'
+ExecStart={{MOLTBOT_HOME}}/.npm-global/bin/moltbot gateway --port {{MOLTBOT_PORT}}
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -28,7 +31,7 @@ NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/home/moltbot/.config/moltbot /home/moltbot/.local/share/moltbot /home/moltbot/.npm-global /home/moltbot/.clawdbot /home/moltbot/clawd
+ReadWritePaths={{MOLTBOT_CONFIG_DIR}} {{MOLTBOT_DATA_DIR}} {{MOLTBOT_HOME}}/.npm-global {{MOLTBOT_HOME}}/.clawdbot {{MOLTBOT_HOME}}/clawd /home/linuxbrew
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectControlGroups=yes
@@ -41,9 +44,9 @@ LockPersonality=yes
 # based on detected system memory (see compute_memory_limits in lib.sh).
 # Formula: heap = 65% RAM (floor 256M, cap 1536M)
 #          MemoryMax = heap + 512M overhead (floor 512M, cap 2G, ≤ 90% RAM)
-# The values below are static defaults for 4 GB+ systems.
+# The values below are placeholder defaults that get replaced during deployment.
 LimitNOFILE=65535
-MemoryMax=2G
+MemoryMax={{MEMORY_MAX}}
 
 [Install]
 WantedBy=multi-user.target
