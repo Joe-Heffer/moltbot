@@ -127,13 +127,35 @@ This interactive wizard guides you through:
 1. **LLM Provider**: Choose Anthropic, OpenAI, or Google Gemini
 2. **Workspace**: Set your workspace name and description
 3. **Channels**: Connect WhatsApp, Telegram, Discord, Slack, etc.
-4. **Skills**: Browse and install community skills from MoltHub
+4. **Skills**: Browse and install community skills from [ClawHub](https://www.clawhub.ai/skills)
 
 The wizard automatically:
 - Generates the auth token for the Gateway UI
 - Creates your `.env` file with your API keys
 - Configures the systemd service
 - Sets up fallback providers if you have multiple keys
+
+## Skills Management (ClawHub)
+
+The deployment installs the [ClawHub](https://www.clawhub.ai/) CLI alongside OpenClaw. ClawHub is the official skill registry — a searchable directory of community skills that extend what your agent can do.
+
+### Browse and Install Skills
+
+```bash
+# Search for skills by keyword (uses vector/embedding search)
+sudo -u openclaw -i clawhub search "home assistant"
+
+# Sync installed skills with the registry (install/update)
+sudo -u openclaw -i clawhub sync
+```
+
+Skills are installed into the workspace `skills/` directory and are picked up by OpenClaw on the next session.
+
+### How Skills Work
+
+A skill is a folder containing a `SKILL.md` file (plus optional supporting files). OpenClaw loads workspace skills from `<workspace>/skills/` automatically. Installed skills are tracked in `.clawhub/lock.json`.
+
+Browse the full directory at [clawhub.ai/skills](https://www.clawhub.ai/skills) or the [community skills catalogue](https://docs.openclaw.ai/tools/skills).
 
 ## Manual Configuration (Without Onboarding)
 
