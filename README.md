@@ -110,6 +110,21 @@ sudo ./deploy/deploy.sh
 
 For more, see **[Service Management](docs/SERVICE_MANAGEMENT.md)**.
 
+## Agent Memory Backup
+
+OpenClaw agents learn from conversations and build context over time. To prevent data loss if your VM is reset or fails, configure automated backups:
+
+```bash
+# Copy and configure backup settings
+sudo cp /home/moltbot/.config/moltbot/backup.conf.template /home/moltbot/.config/moltbot/backup.conf
+sudo nano /home/moltbot/.config/moltbot/backup.conf
+
+# Enable automated daily backups
+sudo systemctl enable --now moltbot-backup.timer
+```
+
+Supports Git repositories (GitHub, GitLab) and cloud storage (via rclone). See **[Agent Memory Backup Guide](docs/AGENT_MEMORY_BACKUP.md)** for detailed setup instructions.
+
 ## Troubleshooting
 
 **Service won't start?**

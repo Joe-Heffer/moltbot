@@ -14,17 +14,22 @@ deploy/               Bash deployment scripts
   uninstall.sh        Removal script
   setup-server.sh     One-time CI/CD server preparation
   configure-fallbacks.sh   AI provider fallback configuration script
+  backup-agent-memory.sh   Agent memory and configuration backup script
   lib.sh              Shared library (logging, root check, port validation, swap helpers)
   moltbot-gateway.service  Systemd service template
+  moltbot-backup.service   Systemd backup service
+  moltbot-backup.timer     Systemd backup timer (daily at 3 AM)
   moltbot.env.template     Environment variable template
   moltbot.fallbacks.json   AI provider fallback configuration template
+  backup.conf.template     Backup configuration template
 
 .github/workflows/
   deploy.yml          GitHub Actions: deploy to VPS via SSH (with version tracking)
   release.yml         GitHub Actions: create releases with semantic versioning
   lint.yml            GitHub Actions: ShellCheck, actionlint, yamllint
 
-docs/                 Extended documentation (use cases, deployment, security, costs)
+docs/                 Extended documentation (use cases, deployment, security, costs, backup)
+  AGENT_MEMORY_BACKUP.md  Agent memory backup guide
 README.md             Quick start and reference
 CONTRIBUTING.md       Contribution guidelines (includes conventional commit format)
 RELEASING.md          Release versioning and process documentation

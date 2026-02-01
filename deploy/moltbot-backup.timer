@@ -1,0 +1,18 @@
+[Unit]
+Description=OpenClaw Agent Memory Backup Timer
+Documentation=https://github.com/Joe-Heffer/moltbot
+Requires=moltbot-backup.service
+
+[Timer]
+# Run daily at 3:00 AM
+OnCalendar=daily
+OnCalendar=*-*-* 03:00:00
+
+# Run 15 minutes after boot if missed
+Persistent=true
+
+# Randomize start time by up to 30 minutes to avoid thundering herd
+RandomizedDelaySec=30min
+
+[Install]
+WantedBy=timers.target

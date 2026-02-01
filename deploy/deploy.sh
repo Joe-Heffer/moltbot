@@ -427,6 +427,22 @@ EOF
     log_success "Systemd service configured"
 }
 
+setup_backup_service() {
+    log_info "Installing backup systemd service and timer..."
+
+    # Copy backup service and timer to systemd
+    cp "${SCRIPT_DIR}/moltbot-backup.service" /etc/systemd/system/moltbot-backup.service
+    cp "${SCRIPT_DIR}/moltbot-backup.timer" /etc/systemd/system/moltbot-backup.timer
+
+    # Reload systemd to pick up new units
+    systemctl daemon-reload
+
+    log_info "Backup service installed (not enabled by default)"
+    log_info "To enable automated backups:"
+    log_info "  1. Copy and configure ${MOLTBOT_CONFIG_DIR}/backup.conf.template to ${MOLTBOT_CONFIG_DIR}/backup.conf"
+    log_info "  2. Run: sudo systemctl enable --now moltbot-backup.timer"
+}
+
 copy_env_template() {
     log_info "Creating environment template..."
 
@@ -453,6 +469,14 @@ copy_env_template() {
         chmod 644 "${MOLTBOT_CONFIG_DIR}/moltbot.fallbacks.json"
         chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_CONFIG_DIR}/moltbot.fallbacks.json"
         log_success "Fallback configuration template copied to ${MOLTBOT_CONFIG_DIR}"
+    fi
+
+    # Copy backup configuration template
+    if [[ -f "${SCRIPT_DIR}/backup.conf.template" ]]; then
+        cp "${SCRIPT_DIR}/backup.conf.template" "${MOLTBOT_CONFIG_DIR}/backup.conf.template"
+        chmod 644 "${MOLTBOT_CONFIG_DIR}/backup.conf.template"
+        chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_CONFIG_DIR}/backup.conf.template"
+        log_info "Backup configuration template copied to ${MOLTBOT_CONFIG_DIR}"
     fi
 }
 
@@ -678,6 +702,9 @@ main() {
 
     DEPLOY_PHASE="trusted proxy configuration"
     configure_trusted_proxies
+
+    DEPLOY_PHASE="backup service installation"
+    setup_backup_service
 
     DEPLOY_PHASE="version tracking"
     save_deploy_version

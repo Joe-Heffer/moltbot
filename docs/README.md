@@ -18,6 +18,7 @@ Welcome to the OpenClaw deployment documentation. This directory contains guides
 ### 🔄 Operations & Automation
 - **[GitHub Actions CI/CD](./GITHUB_ACTIONS_DEPLOYMENT.md)** — Automated deployment and updates
 - **[Low-Memory VPS](./LOW_MEMORY_VPS.md)** — Optimize for 2–4 GB RAM systems
+- **[Agent Memory Backup](./AGENT_MEMORY_BACKUP.md)** — Automated backups to prevent data loss
 
 ### 🔒 Security & Hardening
 - **[Security Guide](./SECURITY.md)** — Hardening checklist and best practices
@@ -78,6 +79,7 @@ docs/
 ├── GITHUB_ACTIONS_DEPLOYMENT.md       (CI/CD setup and automation)
 ├── DEPLOYMENT.md                      (multi-platform deployment options)
 ├── LOW_MEMORY_VPS.md                  (2-4 GB RAM optimization)
+├── AGENT_MEMORY_BACKUP.md             (agent memory backup guide)
 ├── GATEWAY_UI.md                      (web interface setup)
 ├── TELEGRAM_SETUP.md                  (Telegram bot setup)
 ├── WHATSAPP_LEGAL.md                  (WhatsApp ToS and risks)

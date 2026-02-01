@@ -1,0 +1,78 @@
+# OpenClaw Agent Memory Backup Configuration
+# Copy this file to /home/moltbot/.config/moltbot/backup.conf and configure
+
+# =============================================================================
+# Backup Method
+# =============================================================================
+
+# Choose backup method: "git" or "rclone"
+# - git: Backs up to a Git repository (GitHub, GitLab, self-hosted, etc.)
+# - rclone: Backs up to cloud storage (Google Drive, Dropbox, S3, etc.)
+BACKUP_METHOD=git
+
+# =============================================================================
+# Git Repository Backup Configuration
+# =============================================================================
+
+# Git repository URL (SSH or HTTPS)
+# IMPORTANT: Use a PRIVATE repository to protect personal data
+# SSH example (recommended): git@github.com:username/moltbot-backup.git
+# HTTPS example: https://github.com/username/moltbot-backup.git
+BACKUP_GIT_REPO=
+
+# Git branch to use (default: main)
+BACKUP_GIT_BRANCH=main
+
+# Git remote name (default: origin)
+BACKUP_GIT_REMOTE=origin
+
+# =============================================================================
+# Rclone Cloud Storage Configuration
+# =============================================================================
+
+# Rclone remote name (configure with: rclone config)
+# Examples:
+#   - gdrive:moltbot-backup (Google Drive)
+#   - dropbox:moltbot-backup (Dropbox)
+#   - s3:bucket-name/moltbot-backup (Amazon S3)
+BACKUP_RCLONE_REMOTE=
+
+# Path within remote (default: moltbot-backup)
+BACKUP_RCLONE_PATH=moltbot-backup
+
+# Retention period in days (0 = keep all backups)
+# WARNING: Not yet implemented for rclone
+BACKUP_RETENTION_DAYS=30
+
+# =============================================================================
+# Privacy and Exclusions
+# =============================================================================
+
+# The backup script automatically excludes:
+# - .env files (API keys and secrets)
+# - *.log files
+# - *.tmp files
+# - node_modules directories
+#
+# To exclude additional patterns, edit EXCLUDE_PATTERNS in backup-agent-memory.sh
+
+# =============================================================================
+# Setup Instructions
+# =============================================================================
+
+# For Git backups:
+# 1. Create a PRIVATE GitHub/GitLab repository
+# 2. Set up SSH key for the moltbot user:
+#    sudo -u moltbot ssh-keygen -t ed25519 -C "moltbot-backup"
+#    sudo -u moltbot cat /home/moltbot/.ssh/id_ed25519.pub
+# 3. Add the public key to your repository's deploy keys (with write access)
+# 4. Set BACKUP_GIT_REPO above to your repository URL
+# 5. Test the backup: sudo /opt/moltbot-deployment/deploy/backup-agent-memory.sh
+# 6. Enable automated backups: sudo systemctl enable --now moltbot-backup.timer
+
+# For rclone backups:
+# 1. Install rclone: curl https://rclone.org/install.sh | sudo bash
+# 2. Configure remote: sudo rclone config
+# 3. Set BACKUP_RCLONE_REMOTE above
+# 4. Test the backup: sudo /opt/moltbot-deployment/deploy/backup-agent-memory.sh
+# 5. Enable automated backups: sudo systemctl enable --now moltbot-backup.timer
