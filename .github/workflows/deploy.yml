@@ -98,10 +98,13 @@ jobs:
 
             set -e
 
-            # Save deployment version for tracking
-            echo "Deployed version: ${{ steps.version.outputs.version }}"
-            echo "${{ steps.version.outputs.version }}" | sudo tee /opt/moltbot-version > /dev/null
-            sudo chown ${{ env.MOLTBOT_USER }}:${{ env.MOLTBOT_USER }} /opt/moltbot-version
+            # Version tracking: deploy.sh saves /opt/moltbot-version when
+            # ACTION=deploy.  For restarts the existing file is still valid.
+            if [ -f /opt/moltbot-version ]; then
+              echo "Deployed version: $(cat /opt/moltbot-version)"
+            else
+              echo "Deployed version: ${{ steps.version.outputs.version }} (not yet saved)"
+            fi
 
             # Always show status (even on failure, for diagnostics)
             echo ""

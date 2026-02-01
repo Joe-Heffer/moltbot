@@ -592,6 +592,23 @@ run_doctor() {
     sudo -u "$MOLTBOT_USER" -i moltbot doctor --repair 2>/dev/null || true
 }
 
+save_deploy_version() {
+    # Save the repo VERSION to /opt/moltbot-version for deployment tracking.
+    # Previously this was done in the CI workflow with sudo tee/chown, but
+    # those commands were not covered by the deploy user's sudoers rules,
+    # causing "a terminal is required to read the password" errors.
+    # Since deploy.sh already runs as root, it can write the file directly.
+    local version_file="${SCRIPT_DIR}/../VERSION"
+    if [[ -f "$version_file" ]]; then
+        local version
+        version=$(cat "$version_file")
+        echo "$version" > /opt/moltbot-version
+        chown "${MOLTBOT_USER}:${MOLTBOT_USER}" /opt/moltbot-version
+        chmod 644 /opt/moltbot-version
+        log_info "Deploy version saved: ${version}"
+    fi
+}
+
 show_status() {
     echo ""
     log_info "Current status:"
@@ -679,6 +696,9 @@ main() {
 
     DEPLOY_PHASE="trusted proxy configuration"
     configure_trusted_proxies
+
+    DEPLOY_PHASE="version tracking"
+    save_deploy_version
 
     # Clear phase — core deployment succeeded
     DEPLOY_PHASE=""
