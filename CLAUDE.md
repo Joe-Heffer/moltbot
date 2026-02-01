@@ -4,7 +4,7 @@ Project-specific instructions for AI assistants working on this repository.
 
 ## Project Overview
 
-OpenClaw deployment repository — Bash scripts, CI/CD workflows, and documentation for running [OpenClaw](https://openclaw.ai) on Linux VPS. This repo does **not** contain the OpenClaw application itself (installed via `npm install -g moltbot`).
+OpenClaw deployment repository — Bash scripts, CI/CD workflows, and documentation for running [OpenClaw](https://openclaw.ai) on Linux VPS. This repo does **not** contain the OpenClaw application itself (installed via `npm install -g openclaw`).
 
 **Repository type**: Scripts and documentation only (no build step, no test suite).
 
@@ -66,7 +66,7 @@ Use **conventional commits** format — automated release process depends on thi
   - Analyzes commits since last release (conventional commit format required)
   - Auto-detects version bump type
   - Updates VERSION file, creates git tag, generates GitHub Release
-- **Deployment tracking**: VERSION stored at `/opt/moltbot-version` on deployed VPS
+- **Deployment tracking**: VERSION stored at `/opt/openclaw-version` on deployed VPS
 - **PR workflow**: ALWAYS use "squash and merge" to keep release history clean
 
 See `@RELEASING.md` for complete release process.
@@ -77,14 +77,14 @@ See `@RELEASING.md` for complete release process.
 
 **Critical deployment details**:
 - Node.js v22 via NodeSource repositories
-- Dedicated `moltbot` system user (non-root, created by deploy script)
-- Service runs as `moltbot-gateway` systemd unit on port 18789
+- Dedicated `openclaw` system user (non-root, created by deploy script)
+- Service runs as `openclaw-gateway` systemd unit on port 18789
 - Hardened systemd security: `NoNewPrivileges`, `ProtectSystem=strict`, `ProtectHome=read-only`
 - Low-memory optimization: auto-tunes `MemoryMax` and `--max-old-space-size`; creates temporary swap on <4GB RAM; **minimum 2GB RAM required**
 
 ## Where to Find Information
 
-**For OpenClaw/Moltbot features and troubleshooting**, use progressive disclosure:
+**For OpenClaw features and troubleshooting**, use progressive disclosure:
 - Primary: [OpenClaw Documentation](https://docs.openclaw.ai/) — architecture, configuration, channels
 - Source: [OpenClaw GitHub](https://github.com/openclaw/openclaw) — issues, discussions, source code
 - Product: [OpenClaw Website](https://openclaw.ai/) — overview and features

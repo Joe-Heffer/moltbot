@@ -42,11 +42,11 @@ See the project [README](../README.md) for full CI/CD instructions.
 **Service management:**
 
 ```bash
-sudo systemctl start moltbot-gateway
-sudo systemctl stop moltbot-gateway
-sudo systemctl restart moltbot-gateway
-sudo journalctl -u moltbot-gateway -f   # View logs
-sudo -u moltbot -i moltbot doctor       # Run diagnostics
+sudo systemctl start openclaw-gateway
+sudo systemctl stop openclaw-gateway
+sudo systemctl restart openclaw-gateway
+sudo journalctl -u openclaw-gateway -f   # View logs
+sudo -u openclaw -i openclaw doctor       # Run diagnostics
 ```
 
 ## DigitalOcean 1-Click Image
@@ -68,8 +68,8 @@ For serverless deployment at approximately $5/month, the [Moltworker project](ht
 For development or personal use on your own workstation:
 
 ```bash
-npm install -g moltbot@latest
-moltbot onboard --install-daemon
+npm install -g openclaw@latest
+`openclaw onboard --install-daemon
 ```
 
 This installs OpenClaw globally and sets up a background daemon. macOS users get additional capabilities including camera access, screen recording, location services, and native voice support.

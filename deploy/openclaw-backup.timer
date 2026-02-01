@@ -1,7 +1,7 @@
 [Unit]
 Description=OpenClaw Agent Memory Backup Timer
-Documentation=https://github.com/Joe-Heffer/moltbot
-Requires=moltbot-backup.service
+Documentation=https://github.com/Joe-Heffer/deploy-openclaw
+Requires=openclaw-backup.service
 
 [Timer]
 # Run daily at 3:00 AM

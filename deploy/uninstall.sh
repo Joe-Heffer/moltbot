@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Moltbot Uninstallation Script
-# Removes moltbot and its configuration
+# Removes openclaw and its configuration
 #
 
 set -euo pipefail
@@ -9,13 +9,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/lib.sh"
 
-MOLTBOT_USER="${MOLTBOT_USER:-moltbot}"
+MOLTBOT_USER="${MOLTBOT_USER:-openclaw}"
 MOLTBOT_PORT="${MOLTBOT_PORT:-18789}"
 
 confirm_uninstall() {
-    echo -e "${LIB_YELLOW}WARNING: This will remove moltbot and all its data!${LIB_NC}"
+    echo -e "${LIB_YELLOW}WARNING: This will remove openclaw and all its data!${LIB_NC}"
     echo ""
-    read -p "Are you sure you want to uninstall moltbot? (y/N): " -n 1 -r
+    read -p "Are you sure you want to uninstall openclaw? (y/N): " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         log_info "Uninstallation cancelled"
@@ -24,17 +24,17 @@ confirm_uninstall() {
 }
 
 stop_service() {
-    log_info "Stopping moltbot service..."
+    log_info "Stopping openclaw service..."
 
-    if systemctl is-active --quiet moltbot-gateway; then
-        systemctl stop moltbot-gateway
+    if systemctl is-active --quiet openclaw-gateway; then
+        systemctl stop openclaw-gateway
         log_success "Service stopped"
     else
         log_info "Service was not running"
     fi
 
-    if systemctl is-enabled --quiet moltbot-gateway 2>/dev/null; then
-        systemctl disable moltbot-gateway
+    if systemctl is-enabled --quiet openclaw-gateway 2>/dev/null; then
+        systemctl disable openclaw-gateway
         log_success "Service disabled"
     fi
 }
@@ -42,8 +42,8 @@ stop_service() {
 remove_service() {
     log_info "Removing systemd service..."
 
-    if [[ -f /etc/systemd/system/moltbot-gateway.service ]]; then
-        rm /etc/systemd/system/moltbot-gateway.service
+    if [[ -f /etc/systemd/system/openclaw-gateway.service ]]; then
+        rm /etc/systemd/system/openclaw-gateway.service
         systemctl daemon-reload
         log_success "Systemd service removed"
     else
@@ -54,8 +54,8 @@ remove_service() {
 remove_sudoers() {
     log_info "Removing deploy sudoers rules..."
 
-    if [[ -f /etc/sudoers.d/moltbot-deploy ]]; then
-        rm /etc/sudoers.d/moltbot-deploy
+    if [[ -f /etc/sudoers.d/openclaw-deploy ]]; then
+        rm /etc/sudoers.d/openclaw-deploy
         log_success "Sudoers rules removed"
     else
         log_info "Sudoers file not found"
@@ -63,10 +63,10 @@ remove_sudoers() {
 }
 
 remove_symlink() {
-    log_info "Removing /usr/local/bin/moltbot symlink..."
+    log_info "Removing /usr/local/bin/openclaw symlink..."
 
-    if [[ -L /usr/local/bin/moltbot ]]; then
-        rm /usr/local/bin/moltbot
+    if [[ -L /usr/local/bin/openclaw ]]; then
+        rm /usr/local/bin/openclaw
         log_success "Symlink removed"
     else
         log_info "Symlink not found"
@@ -74,13 +74,13 @@ remove_symlink() {
 }
 
 remove_user() {
-    log_info "Removing moltbot user..."
+    log_info "Removing openclaw user..."
 
-    if id "$MOLTBOT_USER" &>/dev/null; then
-        read -p "Remove moltbot user and home directory? (y/N): " -n 1 -r
+    if id "$OPENCLAW_USER" &>/dev/null; then
+        read -p "Remove openclaw user and home directory? (y/N): " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            userdel -r "$MOLTBOT_USER" 2>/dev/null || true
+            userdel -r "$OPENCLAW_USER" 2>/dev/null || true
             log_success "User and home directory removed"
         else
             log_info "User preserved"
@@ -91,7 +91,7 @@ remove_user() {
 }
 
 main() {
-    log_info "Moltbot Uninstallation Script"
+    log_info "OpenClaw Uninstallation Script"
     echo ""
 
     require_root
@@ -104,7 +104,7 @@ main() {
     remove_user
 
     echo ""
-    log_success "Moltbot has been uninstalled"
+    log_success "OpenClaw has been uninstalled"
 }
 
 main "$@"

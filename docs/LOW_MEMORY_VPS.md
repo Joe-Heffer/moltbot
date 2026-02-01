@@ -105,7 +105,7 @@ Each messaging channel (Telegram, WhatsApp, Discord, Slack) maintains a persiste
 Edit your environment configuration:
 
 ```bash
-sudo -u moltbot nano /home/moltbot/.config/moltbot/.env
+sudo -u openclaw nano /home/openclaw/.config/openclaw/.env
 ```
 
 Comment out or remove the tokens for channels you don't use:
@@ -121,7 +121,7 @@ SLACK_BOT_TOKEN=...            # Keep this
 Restart the service:
 
 ```bash
-sudo systemctl restart moltbot-gateway
+sudo systemctl restart openclaw-gateway
 ```
 
 ### Monitor Channel Memory Usage
@@ -130,14 +130,14 @@ Check memory consumption before and after disabling channels:
 
 ```bash
 # Before disabling
-sudo systemctl restart moltbot-gateway
+sudo systemctl restart openclaw-gateway
 sleep 5
-ps aux | grep moltbot-gateway | grep -v grep
+ps aux | grep openclaw-gateway | grep -v grep
 
 # Disable a channel, restart
-sudo systemctl restart moltbot-gateway
+sudo systemctl restart openclaw-gateway
 sleep 5
-ps aux | grep moltbot-gateway | grep -v grep
+ps aux | grep openclaw-gateway | grep -v grep
 ```
 
 Compare the `%MEM` or `RES` columns (resident memory).
@@ -164,7 +164,7 @@ If you're consistently hitting OOM:
 4. **Reduce Node.js heap** (only if you know what you're doing):
    ```bash
    # Edit service override
-   sudo systemctl edit --full moltbot-gateway
+   sudo systemctl edit --full openclaw-gateway
 
    # Find NODE_MAX_OLD_SPACE_SIZE and reduce it
    # WARNING: Too low will crash the service
@@ -172,14 +172,14 @@ If you're consistently hitting OOM:
 
 ## Disk Space Considerations
 
-OpenClaw stores logs, cache, and state files in `/home/moltbot/`. Monitor disk usage:
+OpenClaw stores logs, cache, and state files in `/home/openclaw/`. Monitor disk usage:
 
 ```bash
 # Check disk space
-df -h /home/moltbot
+df -h /home/openclaw
 
 # Check directory size
-du -sh /home/moltbot/
+du -sh /home/openclaw/
 ```
 
 If running low on disk:
@@ -192,7 +192,7 @@ If running low on disk:
 
 2. Clear cache (safe to do while running):
    ```bash
-   sudo -u moltbot rm -rf /home/moltbot/.cache/*
+   sudo -u openclaw rm -rf /home/openclaw/.cache/*
    ```
 
 ## Performance Tips for Low-Memory Systems
@@ -209,7 +209,7 @@ watch -n 2 'free -h && echo "---" && ps aux | grep moltbot | grep -v grep'
 Instead of abrupt restarts, allow the service to finish in-flight requests:
 
 ```bash
-sudo systemctl reload moltbot-gateway
+sudo systemctl reload openclaw-gateway
 ```
 
 ### 3. Tune Swap Aggressiveness
@@ -235,7 +235,7 @@ sudo sysctl -p
 Some community skills are memory-heavy. Limit concurrent execution in your config:
 
 ```bash
-# In /home/moltbot/.config/moltbot/.env
+# In /home/openclaw/.config/openclaw/.env
 SKILL_CONCURRENCY_LIMIT=2
 ```
 
@@ -259,7 +259,7 @@ If deploying to a fresh 2 GB VPS:
 
 3. **Disable unnecessary channels** during onboarding:
    ```bash
-   sudo -u moltbot -i moltbot onboard
+   sudo -u openclaw -i openclaw onboard
    ```
    Only enable channels you need.
 
@@ -273,14 +273,14 @@ If deploying to a fresh 2 GB VPS:
 ### "Cannot allocate memory" errors
 
 ```bash
-sudo journalctl -u moltbot-gateway -n 50 | grep -i memory
+sudo journalctl -u openclaw-gateway -n 50 | grep -i memory
 ```
 
 Solutions:
 - Add more swap space
 - Disable unused channels
 - Upgrade RAM
-- Check for memory leaks: `sudo -u moltbot -i moltbot doctor`
+- Check for memory leaks: `sudo -u openclaw -i openclaw doctor`
 
 ### Service crashes shortly after restart
 
@@ -291,7 +291,7 @@ Solutions:
 
 2. View crash logs:
    ```bash
-   sudo journalctl -u moltbot-gateway -n 100
+   sudo journalctl -u openclaw-gateway -n 100
    ```
 
 3. Increase memory limits (if possible) or disable channels

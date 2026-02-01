@@ -12,9 +12,9 @@ moltbot/
 │   ├── setup-server.sh             # One-time CI/CD server preparation
 │   ├── configure-fallbacks.sh      # AI provider fallback configuration
 │   ├── lib.sh                      # Shared library (logging, validation)
-│   ├── moltbot-gateway.service     # Systemd service template
-│   ├── moltbot.env.template        # Environment variable template
-│   └── moltbot.fallbacks.json      # AI provider fallback configuration template
+│   ├── openclaw-gateway.service     # Systemd service template
+│   ├── openclaw.env.template        # Environment variable template
+│   └── openclaw.fallbacks.json      # AI provider fallback configuration template
 │
 ├── .github/
 │   └── workflows/
@@ -60,7 +60,7 @@ moltbot/
 Performs:
 1. Installs system dependencies (curl, git, gcc, Node.js)
 2. Installs Node.js 22 via NodeSource
-3. Creates dedicated `moltbot` system user
+3. Creates dedicated `openclaw` system user
 4. Installs/updates moltbot via npm
 5. Generates systemd service from template
 6. Configures AI provider fallbacks
@@ -103,11 +103,11 @@ Creates:
 Required before setting up GitHub Actions CI/CD.
 
 #### `configure-fallbacks.sh`
-Applies AI provider fallback configuration from `moltbot.fallbacks.json`.
+Applies AI provider fallback configuration from `openclaw.fallbacks.json`.
 
 **Usage:**
 ```bash
-sudo /opt/moltbot-deployment/deploy/configure-fallbacks.sh
+sudo /opt/openclaw-deployment/deploy/configure-fallbacks.sh
 ```
 
 Converts fallback JSON into gateway configuration.
@@ -123,25 +123,25 @@ Provides:
 
 Not run directly; sourced by other scripts.
 
-#### `moltbot-gateway.service`
+#### `openclaw-gateway.service`
 Systemd service template for running OpenClaw as a background service.
 
 Features:
-- Runs as dedicated `moltbot` user (non-root)
+- Runs as dedicated `openclaw` user (non-root)
 - Security hardening: `NoNewPrivileges`, `ProtectSystem=strict`, `ProtectHome=read-only`
 - Memory and CPU limits based on detected RAM
 - Automatic restart on failure
 - Service dependencies (after network is online)
 
-Deployed to `/etc/systemd/system/moltbot-gateway.service` by `deploy.sh`.
+Deployed to `/etc/systemd/system/openclaw-gateway.service` by `deploy.sh`.
 
-#### `moltbot.env.template`
+#### `openclaw.env.template`
 Template for environment variables.
 
 Copy and configure:
 ```bash
-sudo -u moltbot cp /home/moltbot/.config/moltbot/moltbot.env.template /home/moltbot/.config/moltbot/.env
-sudo -u moltbot nano /home/moltbot/.config/moltbot/.env
+sudo -u openclaw cp /home/openclaw/.config/openclaw/openclaw.env.template /home/openclaw/.config/openclaw/.env
+sudo -u openclaw nano /home/openclaw/.config/openclaw/.env
 ```
 
 Includes settings for:
@@ -151,7 +151,7 @@ Includes settings for:
 - DM policy (pairing vs. open)
 - Resource limits (memory, Node.js heap)
 
-#### `moltbot.fallbacks.json`
+#### `openclaw.fallbacks.json`
 Template for AI provider fallback configuration.
 
 Defines:
@@ -178,7 +178,7 @@ Automated deployment to VPS via SSH.
 - Deployment tracking in GitHub Environments
 - Health checks post-deploy
 - Concurrency control (one deploy at a time)
-- Version tracking (`/opt/moltbot-version` on VPS)
+- Version tracking (`/opt/openclaw-version` on VPS)
 
 See [GitHub Actions Deployment Guide](./GITHUB_ACTIONS_DEPLOYMENT.md).
 
@@ -260,7 +260,7 @@ This enables both:
 - Automated updates via GitHub Actions
 
 ### Security Model
-- **Non-root execution**: OpenClaw runs as `moltbot` user, not root
+- **Non-root execution**: OpenClaw runs as `openclaw` user, not root
 - **Systemd hardening**: `NoNewPrivileges`, `ProtectSystem`, `ProtectHome` prevent privilege escalation
 - **Memory/CPU limits**: Resource constraints prevent runaway processes
 - **Dedicated user**: Isolates OpenClaw from other system services
@@ -268,7 +268,7 @@ This enables both:
 ### Configuration Management
 - **Environment variables**: Stored in `.env`, loaded by systemd service
 - **Fallback configuration**: JSON format, applied by `configure-fallbacks.sh`
-- **Systemd service template**: Generated from `moltbot-gateway.service` with substituted values
+- **Systemd service template**: Generated from `openclaw-gateway.service` with substituted values
 
 ### Supported Distributions
 - **Debian/Ubuntu** — Primary target (Ubuntu 24.04 LTS)

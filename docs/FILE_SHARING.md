@@ -241,10 +241,10 @@ git push -u origin main
 This deployment repository includes automated backup capabilities (see [AGENT_MEMORY_BACKUP.md](AGENT_MEMORY_BACKUP.md)):
 
 **Automated Backup Locations**:
-- `/home/moltbot/.clawdbot` (legacy)
-- `/home/moltbot/clawd/memory` (current memory files)
-- `/home/moltbot/.config/moltbot` (configuration)
-- `/home/moltbot/.local/share/moltbot` (application data)
+- `/home/openclaw/clawd` (legacy)
+- `/home/openclaw/clawd/memory` (current memory files)
+- `/home/openclaw/.config/openclaw` (configuration)
+- `/home/openclaw/.local/share/openclaw` (application data)
 
 **Backup Methods**:
 - Git repositories (GitHub, GitLab, Bitbucket)

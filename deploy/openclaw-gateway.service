@@ -1,0 +1,54 @@
+[Unit]
+Description=OpenClaw Gateway - Personal AI Assistant
+Documentation=https://docs.openclaw.ai
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{OPENCLAW_USER}}
+Group={{OPENCLAW_USER}}
+WorkingDirectory={{OPENCLAW_HOME}}
+Environment=NODE_ENV=production
+Environment=NODE_OPTIONS=--max-old-space-size={{NODE_HEAP_SIZE}}
+Environment=PATH={{BREW_PREFIX}}/bin:{{BREW_PREFIX}}/sbin:{{OPENCLAW_HOME}}/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HOME={{OPENCLAW_HOME}}
+Environment=OPENCLAW_STATE_DIR={{OPENCLAW_HOME}}/clawd
+Environment=OPENCLAW_WORKSPACE_DIR={{OPENCLAW_HOME}}/clawd
+Environment=HOMEBREW_PREFIX={{BREW_PREFIX}}
+Environment=HOMEBREW_CELLAR={{BREW_PREFIX}}/Cellar
+Environment=HOMEBREW_REPOSITORY={{BREW_PREFIX}}/Homebrew
+EnvironmentFile=-{{OPENCLAW_CONFIG_DIR}}/.env
+ExecStartPre=+/bin/sh -c 'for d in {{OPENCLAW_HOME}}/.clawdbot {{OPENCLAW_HOME}}/clawd; do if [ -L "$d" ]; then echo "FATAL: $d is a symlink — refusing to start (security risk)"; exit 1; fi; done && umask 0077 && mkdir -p {{OPENCLAW_HOME}}/.clawdbot {{OPENCLAW_HOME}}/clawd/memory && chown -R {{OPENCLAW_USER}}:{{OPENCLAW_USER}} {{OPENCLAW_HOME}}/.clawdbot {{OPENCLAW_HOME}}/clawd && chmod -R 700 {{OPENCLAW_HOME}}/.clawdbot {{OPENCLAW_HOME}}/clawd'
+ExecStartPre=/bin/sh -c 'echo "openclaw-gateway: pre-start checks..." && test -x {{OPENCLAW_HOME}}/.npm-global/bin/openclaw || { echo "FATAL: {{OPENCLAW_HOME}}/.npm-global/bin/openclaw not found or not executable"; exit 1; } && test -f {{OPENCLAW_CONFIG_DIR}}/.env || echo "WARN: {{OPENCLAW_CONFIG_DIR}}/.env not found, running without env file"'
+ExecStart={{OPENCLAW_HOME}}/.npm-global/bin/openclaw gateway --port {{OPENCLAW_PORT}}
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=openclaw
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths={{OPENCLAW_CONFIG_DIR}} {{OPENCLAW_DATA_DIR}} {{OPENCLAW_HOME}}/.npm-global {{OPENCLAW_HOME}}/.clawdbot {{OPENCLAW_HOME}}/clawd /home/linuxbrew
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+
+# Resource limits
+# NOTE: deploy.sh auto-tunes MemoryMax and --max-old-space-size
+# based on detected system memory (see compute_memory_limits in lib.sh).
+# Formula: heap = 65% RAM (floor 256M, cap 1536M)
+#          MemoryMax = heap + 512M overhead (floor 512M, cap 2G, ≤ 90% RAM)
+# The values below are placeholder defaults that get replaced during deployment.
+LimitNOFILE=65535
+MemoryMax={{MEMORY_MAX}}
+
+[Install]
+WantedBy=multi-user.target

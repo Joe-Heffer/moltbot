@@ -53,7 +53,7 @@ The workflow runs automatically when:
 2. Click **Run workflow**
 3. Choose an action:
    - `deploy` — Install or update OpenClaw, regenerate all configuration
-   - `restart` — Restart the moltbot-gateway service
+   - `restart` — Restart the openclaw-gateway service
 
 ## Workflow Features
 
@@ -71,14 +71,14 @@ Only one deployment runs at a time. Additional triggers queue instead of overlap
 
 ### Health Checks
 After deployment, the workflow verifies:
-- The `moltbot-gateway` service is running
+- The `openclaw-gateway` service is running
 - Port 18789 is listening and responding
 
 ### Zero-Downtime Updates
 The service is only restarted after the update is confirmed successful.
 
 ### Version Tracking
-Each deployment captures the git version and stores it on the VPS at `/opt/moltbot-version` for tracking which release is currently deployed.
+Each deployment captures the git version and stores it on the VPS at `/opt/openclaw-version` for tracking which release is currently deployed.
 
 ## Workflow File
 
@@ -103,8 +103,8 @@ Refer to the [Deployment Details](./QUICK_START.md) for what `deploy.sh` does.
 - Verify firewall allows SSH on port 22 (or your custom port)
 
 ### Service Doesn't Restart After Deploy
-- SSH to VPS and check service status: `sudo systemctl status moltbot-gateway`
-- View logs: `sudo journalctl -u moltbot-gateway -n 50`
+- SSH to VPS and check service status: `sudo systemctl status openclaw-gateway`
+- View logs: `sudo journalctl -u openclaw-gateway -n 50`
 
 ## Monitoring Deployments
 
@@ -130,10 +130,10 @@ Or manually on the VPS:
 
 ```bash
 # View current version
-cat /opt/moltbot-version
+cat /opt/openclaw-version
 
 # Reinstall a specific version
-sudo npm install -g moltbot@0.2.0
+sudo npm install -g openclaw@0.2.0
 sudo ./deploy/deploy.sh
 ```
 

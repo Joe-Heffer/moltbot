@@ -23,8 +23,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  MOLTBOT_USER: moltbot
-  DEPLOY_PATH: /opt/moltbot-deploy
+  OPENCLAW_USER: openclaw
+  DEPLOY_PATH: /opt/openclaw-deploy
 
 permissions:
   contents: read
@@ -57,7 +57,7 @@ jobs:
           script: |
             set -e
 
-            echo "=== Moltbot Deployment Started ==="
+            echo "=== OpenClaw Deployment Started ==="
 
             DEPLOY_DIR="${{ env.DEPLOY_PATH }}"
             DEPLOY_SCRIPT="${DEPLOY_DIR}/deploy/deploy.sh"
@@ -112,17 +112,17 @@ jobs:
                 ;;
               restart)
                 echo "Restarting service..."
-                sudo systemctl restart moltbot-gateway
+                sudo systemctl restart openclaw-gateway
                 ;;
             esac
             DEPLOY_EXIT=$?
 
             set -e
 
-            # Version tracking: deploy.sh saves /opt/moltbot-version when
+            # Version tracking: deploy.sh saves /opt/openclaw-version when
             # ACTION=deploy.  For restarts the existing file is still valid.
-            if [ -f /opt/moltbot-version ]; then
-              echo "Deployed version: $(cat /opt/moltbot-version)"
+            if [ -f /opt/openclaw-version ]; then
+              echo "Deployed version: $(cat /opt/openclaw-version)"
             else
               echo "Deployed version: ${{ steps.version.outputs.version }} (not yet saved)"
             fi
@@ -130,9 +130,9 @@ jobs:
             # Always show status (even on failure, for diagnostics)
             echo ""
             echo "=== Deployment Status ==="
-            sudo systemctl status moltbot-gateway --no-pager || true
+            sudo systemctl status openclaw-gateway --no-pager || true
             echo ""
-            sudo su - ${{ env.MOLTBOT_USER }} -c "moltbot --version" || echo "Moltbot not yet installed"
+            sudo su - ${{ env.OPENCLAW_USER }} -c "openclaw --version" || echo "OpenClaw not yet installed"
             echo ""
             echo "Repository version: ${{ steps.version.outputs.version }}"
 
@@ -140,7 +140,7 @@ jobs:
             if [ "$DEPLOY_EXIT" -ne 0 ]; then
               echo ""
               echo "=== Deploy failed (exit $DEPLOY_EXIT) — recent service logs ==="
-              sudo journalctl -u moltbot-gateway -n 50 --no-pager || true
+              sudo journalctl -u openclaw-gateway -n 50 --no-pager || true
               exit "$DEPLOY_EXIT"
             fi
 
@@ -168,12 +168,12 @@ jobs:
             echo "=== Health Check ==="
 
             # Check if service is running (no --quiet flag; sudoers doesn't allow it)
-            SERVICE_STATE=$(sudo systemctl is-active moltbot-gateway || true)
+            SERVICE_STATE=$(sudo systemctl is-active openclaw-gateway || true)
             if [ "$SERVICE_STATE" = "active" ]; then
               echo "Service is running"
             else
               echo "Service is NOT running (state: $SERVICE_STATE)"
-              sudo journalctl -u moltbot-gateway -n 20 --no-pager
+              sudo journalctl -u openclaw-gateway -n 20 --no-pager
               exit 1
             fi
 
@@ -186,8 +186,8 @@ jobs:
             fi
 
             # Check deployed version
-            if [ -f /opt/moltbot-version ]; then
-              echo "Deployed version: $(cat /opt/moltbot-version)"
+            if [ -f /opt/openclaw-version ]; then
+              echo "Deployed version: $(cat /opt/openclaw-version)"
             fi
 
             echo "Health check passed"

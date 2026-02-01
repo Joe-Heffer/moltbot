@@ -15,8 +15,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  MOLTBOT_USER: moltbot
-  DEPLOY_PATH: /opt/moltbot-deploy
+  OPENCLAW_USER: openclaw
+  DEPLOY_PATH: /opt/openclaw-deploy
 
 permissions:
   contents: read
@@ -39,12 +39,12 @@ jobs:
             set -e
             echo "=== Nightly Update Check ==="
 
-            MOLTBOT_BIN="/home/${{ env.MOLTBOT_USER }}/.npm-global/bin/moltbot"
+            OPENCLAW_BIN="/home/${{ env.OPENCLAW_USER }}/.npm-global/bin/openclaw"
 
             # Get currently installed version
             CURRENT="unknown"
-            if [ -x "$MOLTBOT_BIN" ]; then
-              CURRENT=$(sudo -u ${{ env.MOLTBOT_USER }} "$MOLTBOT_BIN" --version 2>/dev/null || echo "unknown")
+            if [ -x "$OPENCLAW_BIN" ]; then
+              CURRENT=$(sudo -u ${{ env.OPENCLAW_USER }} "$OPENCLAW_BIN" --version 2>/dev/null || echo "unknown")
             fi
             echo "Installed version: ${CURRENT}"
 
@@ -102,12 +102,12 @@ jobs:
             set -e
             echo "=== Health Check ==="
 
-            SERVICE_STATE=$(sudo systemctl is-active moltbot-gateway || true)
+            SERVICE_STATE=$(sudo systemctl is-active openclaw-gateway || true)
             if [ "$SERVICE_STATE" = "active" ]; then
               echo "Service is running"
             else
               echo "Service is NOT running (state: ${SERVICE_STATE})"
-              sudo journalctl -u moltbot-gateway -n 20 --no-pager
+              sudo journalctl -u openclaw-gateway -n 20 --no-pager
               exit 1
             fi
 
@@ -118,9 +118,9 @@ jobs:
               exit 1
             fi
 
-            MOLTBOT_BIN="/home/${{ env.MOLTBOT_USER }}/.npm-global/bin/moltbot"
-            if [ -x "$MOLTBOT_BIN" ]; then
-              echo "Running version: $(sudo -u ${{ env.MOLTBOT_USER }} "$MOLTBOT_BIN" --version 2>/dev/null || echo 'unknown')"
+            OPENCLAW_BIN="/home/${{ env.OPENCLAW_USER }}/.npm-global/bin/openclaw"
+            if [ -x "$OPENCLAW_BIN" ]; then
+              echo "Running version: $(sudo -u ${{ env.OPENCLAW_USER }} "$OPENCLAW_BIN" --version 2>/dev/null || echo 'unknown')"
             fi
 
             echo "Health check passed"

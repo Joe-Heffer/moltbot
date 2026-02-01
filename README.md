@@ -18,9 +18,9 @@ OpenClaw is a personal AI assistant that runs on your own hardware. It connects 
 git clone https://github.com/Joe-Heffer/moltbot.git
 cd moltbot
 sudo ./deploy/deploy.sh
-sudo -u moltbot -i moltbot onboard
-sudo systemctl start moltbot-gateway
-sudo systemctl enable moltbot-gateway
+sudo -u openclaw -i openclaw onboard
+sudo systemctl start openclaw-gateway
+sudo systemctl enable openclaw-gateway
 ```
 
 Then access the Gateway UI at `http://<your-vm-ip>:18789`
@@ -69,7 +69,7 @@ This repository provides:
 - **GitHub Actions workflows** — Automated deployment and semantic versioning
 - **Documentation** — Setup guides, security hardening, troubleshooting
 
-It does **not** contain the OpenClaw application itself (installed via `npm install -g moltbot`).
+It does **not** contain the OpenClaw application itself (installed via `npm install -g openclaw`).
 
 ## Automated Deployment (GitHub Actions)
 
@@ -90,17 +90,17 @@ See **[GitHub Actions CI/CD Guide](docs/GITHUB_ACTIONS_DEPLOYMENT.md)** for deta
 
 ### Restart the Service
 ```bash
-sudo systemctl restart moltbot-gateway
+sudo systemctl restart openclaw-gateway
 ```
 
 ### View Logs
 ```bash
-sudo journalctl -u moltbot-gateway -f
+sudo journalctl -u openclaw-gateway -f
 ```
 
 ### Run Diagnostics
 ```bash
-sudo -u moltbot -i moltbot doctor
+sudo -u openclaw -i openclaw doctor
 ```
 
 ### Update OpenClaw
@@ -116,11 +116,11 @@ OpenClaw agents learn from conversations and build context over time. To prevent
 
 ```bash
 # Copy and configure backup settings
-sudo cp /home/moltbot/.config/moltbot/backup.conf.template /home/moltbot/.config/moltbot/backup.conf
-sudo nano /home/moltbot/.config/moltbot/backup.conf
+sudo cp /home/openclaw/.config/openclaw/backup.conf.template /home/openclaw/.config/openclaw/backup.conf
+sudo nano /home/openclaw/.config/openclaw/backup.conf
 
 # Enable automated daily backups
-sudo systemctl enable --now moltbot-backup.timer
+sudo systemctl enable --now openclaw-backup.timer
 ```
 
 Supports Git repositories (GitHub, GitLab) and cloud storage (via rclone). See **[Agent Memory Backup Guide](docs/AGENT_MEMORY_BACKUP.md)** for detailed setup instructions.
@@ -129,7 +129,7 @@ Supports Git repositories (GitHub, GitLab) and cloud storage (via rclone). See *
 
 **Service won't start?**
 ```bash
-sudo journalctl -u moltbot-gateway -n 50
+sudo journalctl -u openclaw-gateway -n 50
 ```
 
 **Out of memory?**

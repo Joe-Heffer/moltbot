@@ -23,7 +23,7 @@ Connect OpenClaw to Telegram so you can chat with your assistant from any Telegr
 SSH into your VPS and edit the OpenClaw environment file:
 
 ```bash
-sudo -u moltbot nano /home/moltbot/.config/moltbot/.env
+sudo -u openclaw nano /home/openclaw/.config/openclaw/.env
 ```
 
 Uncomment and set the Telegram line:
@@ -32,21 +32,21 @@ Uncomment and set the Telegram line:
 TELEGRAM_BOT_TOKEN=123456789:ABCdefGhIjKlMnOpQrStUvWxYz
 ```
 
-The env file is loaded by the systemd service via the `EnvironmentFile` directive in `moltbot-gateway.service`. It should already have `chmod 600` permissions (set by the installer), so the token is readable only by the `moltbot` user.
+The env file is loaded by the systemd service via the `EnvironmentFile` directive in `openclaw-gateway.service`. It should already have `chmod 600` permissions (set by the installer), so the token is readable only by the `openclaw` user.
 
 > **Known issue:** The Gateway UI may show an "Unsupported schema node. Use Raw mode" error when trying to configure Telegram settings ([issue #57](https://github.com/Joe-Heffer/moltbot/issues/57)). This is a UI rendering bug. The workaround is to configure Telegram via the `.env` file as shown above, rather than using the Gateway web interface. See the [Troubleshooting Guide](./TROUBLESHOOTING.md#unsupported-schema-node-error-in-gateway-ui-for-telegram) for details.
 
 ## Step 3: Restart the Service
 
 ```bash
-sudo systemctl restart moltbot-gateway
+sudo systemctl restart openclaw-gateway
 ```
 
 Verify it started cleanly:
 
 ```bash
-sudo systemctl status moltbot-gateway
-sudo journalctl -u moltbot-gateway -n 20 --no-pager
+sudo systemctl status openclaw-gateway
+sudo journalctl -u openclaw-gateway -n 20 --no-pager
 ```
 
 ## Step 4: Test the Connection
@@ -63,7 +63,7 @@ Your Telegram user id: 123456789
 Pairing code: abc123
 
 Ask the bot owner to approve with:
-moltbot pairing approve telegram <code>
+`openclaw pairing approve telegram <code>
 ```
 
 This is expected — see Step 5 below.
@@ -71,7 +71,7 @@ This is expected — see Step 5 below.
 If you do not receive any reply at all, check the journal logs for errors:
 
 ```bash
-sudo journalctl -u moltbot-gateway -n 20 --no-pager
+sudo journalctl -u openclaw-gateway -n 20 --no-pager
 ```
 
 The most common cause is a mistyped bot token.
@@ -88,7 +88,7 @@ When someone messages the bot for the first time, the bot replies with a
 your server and run:
 
 ```bash
-sudo -u moltbot -i moltbot pairing approve <channel> <code>
+sudo -u openclaw -i openclaw pairing approve <channel> <code>
 ```
 
 Replace `<channel>` with the channel identifier and `<code>` with the
@@ -107,14 +107,14 @@ pairing code shown in Telegram.
 Once the pairing CLI supports Telegram, you can manage contacts with:
 
 ```bash
-sudo -u moltbot -i moltbot pairing list
-sudo -u moltbot -i moltbot pairing approve <channel> <code>
+sudo -u openclaw -i openclaw pairing list
+sudo -u openclaw -i openclaw pairing approve <channel> <code>
 ```
 
 To see all available pairing subcommands and options:
 
 ```bash
-sudo -u moltbot -i moltbot pairing --help
+sudo -u openclaw -i openclaw pairing --help
 ```
 
 ### Workaround: set DM_POLICY=open
@@ -123,7 +123,7 @@ Until the pairing CLI supports Telegram, set `DM_POLICY=open` so the bot
 responds to all incoming messages without approval:
 
 ```bash
-sudo -u moltbot nano /home/moltbot/.config/moltbot/.env
+sudo -u openclaw nano /home/openclaw/.config/openclaw/.env
 ```
 
 Set or add:
@@ -135,14 +135,14 @@ DM_POLICY=open
 Then restart the service:
 
 ```bash
-sudo systemctl restart moltbot-gateway
+sudo systemctl restart openclaw-gateway
 ```
 
 Message your bot on Telegram again — it should now respond normally.
 
 > **Warning:** `DM_POLICY=open` allows anyone who discovers your bot's
 > Telegram username to interact with it. Switch back to `pairing` once a
-> fixed version of Moltbot is released.
+> fixed version of OpenClaw is released.
 
 ## Telegram Uses Chat IDs, Not Phone Numbers
 
@@ -163,12 +163,12 @@ for details.
 
 ## Security Notes
 
-- The `.env` file lives at `/home/moltbot/.config/moltbot/.env` with `600` permissions, so only the `moltbot` system user can read it.
+- The `.env` file lives at `/home/openclaw/.config/openclaw/.env` with `600` permissions, so only the `openclaw` system user can read it.
 - The systemd unit runs with `ProtectHome=read-only` and `NoNewPrivileges=yes` (see [Security Guide](./SECURITY.md) for the full hardening profile).
 - The token is **not** managed through CI/CD — it stays on the server and persists across deploys.
 
 ## Further Reading
 
-- [Official Telegram channel docs](https://docs.molt.bot/channels/telegram) — full feature reference and advanced options
+- [Official Telegram channel docs](https://docs.openclaw.ai/channels/telegram) — full feature reference and advanced options
 - [Telegram Bot API documentation](https://core.telegram.org/bots/api)
-- [Environment template](../deploy/moltbot.env.template) — all available environment variables
+- [Environment template](../deploy/openclaw.env.template) — all available environment variables

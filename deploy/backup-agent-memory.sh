@@ -11,17 +11,17 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/lib.sh"
 
 # Default paths
-MOLTBOT_USER="${MOLTBOT_USER:-moltbot}"
-MOLTBOT_HOME="/home/${MOLTBOT_USER}"
-BACKUP_CONFIG="${MOLTBOT_HOME}/.config/moltbot/backup.conf"
-BACKUP_STAGING_DIR="/tmp/moltbot-backup-$$"
+OPENCLAW_USER="${OPENCLAW_USER:-openclaw}"
+OPENCLAW_HOME="/home/${OPENCLAW_USER}"
+BACKUP_CONFIG="${OPENCLAW_HOME}/.config/openclaw/backup.conf"
+BACKUP_STAGING_DIR="/tmp/openclaw-backup-$$"
 
 # Directories to backup
 BACKUP_SOURCES=(
-    "${MOLTBOT_HOME}/.clawdbot"
-    "${MOLTBOT_HOME}/clawd/memory"
-    "${MOLTBOT_HOME}/.config/moltbot"
-    "${MOLTBOT_HOME}/.local/share/moltbot"
+    "${OPENCLAW_HOME}/.clawdbot"
+    "${OPENCLAW_HOME}/clawd/memory"
+    "${OPENCLAW_HOME}/.config/openclaw"
+    "${OPENCLAW_HOME}/.local/share/openclaw"
 )
 
 # Files to exclude for privacy (add patterns here)
@@ -70,7 +70,7 @@ create_staging_area() {
         fi
 
         # Create relative path structure in staging
-        local rel_path="${source_dir#${MOLTBOT_HOME}/}"
+        local rel_path="${source_dir#${OPENCLAW_HOME}/}"
         local dest_dir="${BACKUP_STAGING_DIR}/${rel_path}"
         mkdir -p "$(dirname "${dest_dir}")"
 
@@ -92,9 +92,9 @@ create_staging_area() {
     cat > "${BACKUP_STAGING_DIR}/backup-metadata.txt" <<EOF
 Backup created: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
 Hostname: $(hostname)
-Moltbot user: ${MOLTBOT_USER}
+OpenClaw user: ${OPENCLAW_USER}
 Backup method: ${BACKUP_METHOD}
-Moltbot version: $(sudo -u "${MOLTBOT_USER}" moltbot --version 2>/dev/null || echo "unknown")
+OpenClaw version: $(sudo -u "${OPENCLAW_USER}" openclaw --version 2>/dev/null || echo "unknown")
 EOF
 
     log_success "Staging area created: ${BACKUP_STAGING_DIR}"
@@ -115,9 +115,9 @@ backup_to_git() {
     local repo_dir="${BACKUP_STAGING_DIR}/repo"
 
     # Clone or pull existing repo
-    if [[ -d "${MOLTBOT_HOME}/.moltbot-backup-repo/.git" ]]; then
+    if [[ -d "${OPENCLAW_HOME}/.openclaw-backup-repo/.git" ]]; then
         log_info "Using existing backup repository"
-        cp -a "${MOLTBOT_HOME}/.moltbot-backup-repo" "${repo_dir}"
+        cp -a "${OPENCLAW_HOME}/.openclaw-backup-repo" "${repo_dir}"
         cd "${repo_dir}"
 
         # Fetch latest changes
@@ -140,7 +140,7 @@ backup_to_git() {
     # Copy backup data to repo
     log_info "Copying backup data to repository"
     for source_dir in "${BACKUP_SOURCES[@]}"; do
-        local rel_path="${source_dir#${MOLTBOT_HOME}/}"
+        local rel_path="${source_dir#${OPENCLAW_HOME}/}"
         local staging_source="${BACKUP_STAGING_DIR}/${rel_path}"
 
         if [[ -d "${staging_source}" ]]; then
@@ -186,9 +186,9 @@ EOF
             log_success "Backup pushed successfully"
 
             # Cache the repo for next time
-            rm -rf "${MOLTBOT_HOME}/.moltbot-backup-repo"
-            cp -a "${repo_dir}" "${MOLTBOT_HOME}/.moltbot-backup-repo"
-            chown -R "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_HOME}/.moltbot-backup-repo"
+            rm -rf "${OPENCLAW_HOME}/.openclaw-backup-repo"
+            cp -a "${repo_dir}" "${OPENCLAW_HOME}/.openclaw-backup-repo"
+            chown -R "${OPENCLAW_USER}:${OPENCLAW_USER}" "${OPENCLAW_HOME}/.openclaw-backup-repo"
         else
             log_error "Failed to push backup to remote repository"
             exit 1
@@ -198,7 +198,7 @@ EOF
 
 backup_to_rclone() {
     local rclone_remote="${BACKUP_RCLONE_REMOTE:-}"
-    local rclone_path="${BACKUP_RCLONE_PATH:-moltbot-backup}"
+    local rclone_path="${BACKUP_RCLONE_PATH:-openclaw-backup}"
 
     if [[ -z "${rclone_remote}" ]]; then
         log_error "BACKUP_RCLONE_REMOTE not set in ${BACKUP_CONFIG}"

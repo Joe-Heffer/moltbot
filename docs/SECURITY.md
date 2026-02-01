@@ -10,7 +10,7 @@ OpenClaw has full access to the host system it runs on. The official [security d
 
 1. **Dedicated machine or VM.** Never run OpenClaw on a workstation that holds sensitive data, production credentials, or access to critical infrastructure.
 
-2. **Non-root execution.** The install script in this repository creates a dedicated `moltbot` user with limited privileges. The systemd service enforces `NoNewPrivileges`, `ProtectSystem=strict`, and `ProtectHome=read-only`.
+2. **Non-root execution.** The install script in this repository creates a dedicated `openclaw` user with limited privileges. The systemd service enforces `NoNewPrivileges`, `ProtectSystem=strict`, and `ProtectHome=read-only`.
 
 3. **DM pairing mode.** The default `DM_POLICY=pairing` setting requires an approval code before new contacts can interact with the bot. Do not set this to `open` in production.
 
@@ -18,14 +18,14 @@ OpenClaw has full access to the host system it runs on. The official [security d
 
 5. **Review community skills.** Skills from MoltHub are not audited. Security researchers have demonstrated proof-of-concept attacks through malicious skills that execute arbitrary commands. Review the source of every skill before installation.
 
-6. **Credential management.** Store API keys in environment files with restrictive permissions (mode `0600`, owned by the moltbot user). Consider using a secrets manager such as 1Password or Bitwarden. GitGuardian reported 181 leaked secrets across public OpenClaw repositories.
+6. **Credential management.** Store API keys in environment files with restrictive permissions (mode `0600`, owned by the openclaw user). Consider using a secrets manager such as 1Password or Bitwarden. GitGuardian reported 181 leaked secrets across public OpenClaw repositories.
 
 7. **Docker sandboxing.** For additional isolation, wrap the agent in a hardened Docker container. See the [Composio hardening guide](https://composio.dev/blog/secure-moltbot-clawdbot-setup-composio) for a walkthrough.
 
 8. **Configure trusted proxies.** If you expose the Control UI through a reverse proxy (nginx, Caddy, Tailscale), set `GATEWAY_TRUSTED_PROXIES` in your `.env` file so the gateway reads the real client IP from `X-Forwarded-For` headers. Without this, local-client checks can be spoofed through the proxy. See the `.env` template for examples.
 
    ```bash
-   # In /home/moltbot/.config/moltbot/.env
+   # In /home/openclaw/.config/openclaw/.env
    GATEWAY_TRUSTED_PROXIES=127.0.0.1        # proxy on the same machine
    GATEWAY_TRUSTED_PROXIES=100.64.0.0/10    # Tailscale CGNAT range
    ```
@@ -33,10 +33,10 @@ OpenClaw has full access to the host system it runs on. The official [security d
    The deploy script converts this into the `gateway.trustedProxies` JSON config automatically. You can also set it directly:
 
    ```bash
-   sudo -u moltbot -i moltbot config set gateway.trustedProxies '["127.0.0.1"]'
+   sudo -u openclaw -i openclaw config set gateway.trustedProxies '["127.0.0.1"]'
    ```
 
-9. **State directory integrity.** The deploy script and systemd service verify that `/home/moltbot/.clawdbot` and `/home/moltbot/clawd` are real directories, not symlinks. Symlinks in these locations are a security risk because an attacker who controls the symlink target can redirect state writes. The service refuses to start if a symlink is detected.
+9. **State directory integrity.** The deploy script and systemd service verify that `/home/openclaw/clawd` and `/home/openclaw/clawd` are real directories, not symlinks. Symlinks in these locations are a security risk because an attacker who controls the symlink target can redirect state writes. The service refuses to start if a symlink is detected.
 
 10. **Keep OpenClaw updated.** Run `./deploy/deploy.sh` or trigger the CI/CD deploy workflow regularly to pick up security patches.
 

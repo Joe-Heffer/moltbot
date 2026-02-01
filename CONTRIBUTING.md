@@ -106,7 +106,7 @@ This repository uses **conventional commits** for clear, automated release versi
 
 **Feature:**
 ```
-feat: add systemd hardening for moltbot service
+feat: add systemd hardening for openclaw service
 
 - Add ProtectSystem=strict
 - Add NoNewPrivileges=yes
@@ -137,7 +137,7 @@ BREAKING CHANGE: The systemd service file format has changed
 or
 
 ```
-feat!: change moltbot user directory structure
+feat!: change openclaw user directory structure
 ```
 
 See [RELEASING.md](RELEASING.md) for more details on versioning and releases.
@@ -149,7 +149,7 @@ If you find a bug or have a suggestion, please [open an issue](https://github.co
 - A clear title describing the problem
 - Steps to reproduce (if applicable)
 - Your environment (OS, Node.js version, RAM)
-- Relevant logs (`sudo journalctl -u moltbot-gateway -n 50`)
+- Relevant logs (`sudo journalctl -u openclaw-gateway -n 50`)
 
 ## Testing Changes
 

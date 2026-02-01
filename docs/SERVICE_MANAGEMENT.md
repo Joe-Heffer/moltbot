@@ -7,47 +7,47 @@ Start, stop, monitor, and troubleshoot the OpenClaw gateway service.
 ### Start the Service
 
 ```bash
-sudo systemctl start moltbot-gateway
+sudo systemctl start openclaw-gateway
 ```
 
 ### Stop the Service
 
 ```bash
-sudo systemctl stop moltbot-gateway
+sudo systemctl stop openclaw-gateway
 ```
 
 ### Restart the Service
 
 ```bash
-sudo systemctl restart moltbot-gateway
+sudo systemctl restart openclaw-gateway
 ```
 
 After changing configuration files (`.env`, fallbacks), always restart:
 
 ```bash
 # Edit config
-sudo -u moltbot nano /home/moltbot/.config/moltbot/.env
+sudo -u openclaw nano /home/openclaw/.config/openclaw/.env
 
 # Restart to apply changes
-sudo systemctl restart moltbot-gateway
+sudo systemctl restart openclaw-gateway
 ```
 
 ### Enable Auto-Start on Boot
 
 ```bash
-sudo systemctl enable moltbot-gateway
+sudo systemctl enable openclaw-gateway
 ```
 
 Disable auto-start:
 
 ```bash
-sudo systemctl disable moltbot-gateway
+sudo systemctl disable openclaw-gateway
 ```
 
 ### Check Service Status
 
 ```bash
-sudo systemctl status moltbot-gateway
+sudo systemctl status openclaw-gateway
 ```
 
 Shows:
@@ -61,7 +61,7 @@ Shows:
 ### Live Logs (Follow Mode)
 
 ```bash
-sudo journalctl -u moltbot-gateway -f
+sudo journalctl -u openclaw-gateway -f
 ```
 
 Streams logs in real time. Press `Ctrl+C` to exit.
@@ -70,33 +70,33 @@ Streams logs in real time. Press `Ctrl+C` to exit.
 
 ```bash
 # Last 50 lines
-sudo journalctl -u moltbot-gateway -n 50
+sudo journalctl -u openclaw-gateway -n 50
 
 # Last 100 lines
-sudo journalctl -u moltbot-gateway -n 100
+sudo journalctl -u openclaw-gateway -n 100
 ```
 
 ### Logs Since a Specific Time
 
 ```bash
 # Last 10 minutes
-sudo journalctl -u moltbot-gateway --since "10 minutes ago"
+sudo journalctl -u openclaw-gateway --since "10 minutes ago"
 
 # Last 1 hour
-sudo journalctl -u moltbot-gateway --since "1 hour ago"
+sudo journalctl -u openclaw-gateway --since "1 hour ago"
 
 # Since a specific date/time
-sudo journalctl -u moltbot-gateway --since "2025-02-01 10:00:00"
+sudo journalctl -u openclaw-gateway --since "2025-02-01 10:00:00"
 ```
 
 ### Verbose Logs
 
 ```bash
 # All log levels including debug
-sudo journalctl -u moltbot-gateway -p debug -n 50
+sudo journalctl -u openclaw-gateway -p debug -n 50
 
 # Only errors
-sudo journalctl -u moltbot-gateway -p err -n 50
+sudo journalctl -u openclaw-gateway -p err -n 50
 ```
 
 ## Common Status Checks
@@ -104,7 +104,7 @@ sudo journalctl -u moltbot-gateway -p err -n 50
 ### Verify Service is Running
 
 ```bash
-sudo systemctl is-active moltbot-gateway
+sudo systemctl is-active openclaw-gateway
 ```
 
 Output: `active` or `inactive`
@@ -132,10 +132,10 @@ curl -s http://localhost:18789/health
 
 ```bash
 # Real-time system monitor
-top -p $(pgrep -f 'moltbot-gateway')
+top -p $(pgrep -f 'openclaw-gateway')
 
 # Or use htop for better formatting
-htop -p $(pgrep -f 'moltbot-gateway')
+htop -p $(pgrep -f 'openclaw-gateway')
 ```
 
 ## Troubleshooting
@@ -145,7 +145,7 @@ htop -p $(pgrep -f 'moltbot-gateway')
 Check the logs:
 
 ```bash
-sudo journalctl -u moltbot-gateway -n 50
+sudo journalctl -u openclaw-gateway -n 50
 ```
 
 Common causes:
@@ -153,28 +153,28 @@ Common causes:
   ```bash
   sudo lsof -i :18789
   ```
-- **Permission denied**: Ensure the `moltbot` user owns config files:
+- **Permission denied**: Ensure the `openclaw` user owns config files:
   ```bash
-  sudo chown -R moltbot:moltbot /home/moltbot/.config
+  sudo chown -R openclaw:openclaw /home/openclaw/.config
   ```
 - **Out of memory**: See [Low-Memory VPS](./LOW_MEMORY_VPS.md)
-- **Config file errors**: Validate JSON in `/home/moltbot/.config/moltbot/.env`
+- **Config file errors**: Validate JSON in `/home/openclaw/.config/openclaw/.env`
 
 ### Service Crashes Repeatedly
 
 1. Check logs for the error:
    ```bash
-   sudo journalctl -u moltbot-gateway -n 100
+   sudo journalctl -u openclaw-gateway -n 100
    ```
 
 2. Run diagnostics:
    ```bash
-   sudo -u moltbot -i moltbot doctor
+   sudo -u openclaw -i openclaw doctor
    ```
 
 3. Try repair mode:
    ```bash
-   sudo -u moltbot -i moltbot doctor --repair
+   sudo -u openclaw -i openclaw doctor --repair
    ```
 
 4. Check available RAM:
@@ -218,17 +218,17 @@ Each active channel (Telegram, WhatsApp, Discord, Slack) consumes memory. To red
 
 ## Advanced: Manual Service Configuration
 
-The systemd service is generated from `/home/user/moltbot/deploy/moltbot-gateway.service` and deployed by `deploy.sh`. To modify the service:
+The systemd service is generated from `/home/user/openclaw-deployment/deploy/openclaw-gateway.service` and deployed by `deploy.sh`. To modify the service:
 
-1. Edit the template: `/home/moltbot/deploy/moltbot-gateway.service`
+1. Edit the template: `/home/openclaw/deploy/openclaw-gateway.service`
 2. Re-run deployment: `sudo ./deploy/deploy.sh`
 
 Or manually edit and reload:
 
 ```bash
-sudo systemctl edit --full moltbot-gateway
+sudo systemctl edit --full openclaw-gateway
 sudo systemctl daemon-reload
-sudo systemctl restart moltbot-gateway
+sudo systemctl restart openclaw-gateway
 ```
 
 ## Monitoring and Metrics
@@ -238,7 +238,7 @@ sudo systemctl restart moltbot-gateway
 ```bash
 while true; do
   echo "=== $(date) ==="
-  sudo systemctl status moltbot-gateway | grep -E "Active|memory"
+  sudo systemctl status openclaw-gateway | grep -E "Active|memory"
   echo ""
   sleep 10
 done
@@ -250,10 +250,10 @@ The service is configured with memory limits based on your RAM:
 
 ```bash
 # View current limits
-sudo systemctl show moltbot-gateway -p MemoryMax
+sudo systemctl show openclaw-gateway -p MemoryMax
 
 # View all service properties
-sudo systemctl show moltbot-gateway
+sudo systemctl show openclaw-gateway
 ```
 
 ### Performance Tuning
@@ -269,7 +269,7 @@ To manually adjust:
 
 ```bash
 # Edit the service environment
-sudo nano /etc/systemd/system/moltbot-gateway.service.d/override.conf
+sudo nano /etc/systemd/system/openclaw-gateway.service.d/override.conf
 
 # Set custom memory limit
 [Service]
@@ -277,7 +277,7 @@ MemoryMax=2G
 
 # Then reload and restart
 sudo systemctl daemon-reload
-sudo systemctl restart moltbot-gateway
+sudo systemctl restart openclaw-gateway
 ```
 
 ## Updates and Restarts
@@ -286,7 +286,7 @@ sudo systemctl restart moltbot-gateway
 
 ```bash
 # Pull the latest deployment scripts
-cd /path/to/moltbot
+cd /path/to/openclaw-deployment
 git pull origin main
 
 # Run the idempotent deployment (updates npm package, restarts service)
@@ -298,13 +298,13 @@ sudo ./deploy/deploy.sh
 Graceful restart (allows in-flight requests to complete):
 
 ```bash
-sudo systemctl reload moltbot-gateway
+sudo systemctl reload openclaw-gateway
 ```
 
 Or forceful restart:
 
 ```bash
-sudo systemctl restart moltbot-gateway
+sudo systemctl restart openclaw-gateway
 ```
 
 ## Related Documentation

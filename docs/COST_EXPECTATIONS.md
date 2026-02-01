@@ -40,7 +40,7 @@ The default configuration now uses **Claude Sonnet 4.5** as the primary model. I
 You can switch your primary model via the Gateway UI or CLI:
 
 ```bash
-sudo -u moltbot -i openclaw config set agents.defaults.model anthropic/claude-sonnet-4.5
+sudo -u openclaw -i openclaw config set agents.defaults.model anthropic/claude-sonnet-4.5
 ```
 
 ### 2. Use Gemini Flash for routine tasks
@@ -49,10 +49,10 @@ Google's **Gemini 2.5 Flash** costs $0.15/$0.60 per 1M tokens — roughly **20--
 
 ```bash
 # Set as primary (cheapest option)
-sudo -u moltbot -i openclaw config set agents.defaults.model google/gemini-2.5-flash
+sudo -u openclaw -i openclaw config set agents.defaults.model google/gemini-2.5-flash
 
 # Or add as fallback (used when primary is unavailable)
-sudo -u moltbot -i openclaw models fallbacks add google/gemini-2.5-flash
+sudo -u openclaw -i openclaw models fallbacks add google/gemini-2.5-flash
 ```
 
 Google also offers a **free tier** with up to 1,000 requests/day.
@@ -74,13 +74,13 @@ To set up OpenRouter:
 
 ```bash
 # DeepSeek R1 via OpenRouter
-sudo -u moltbot -i openclaw models fallbacks add openrouter/deepseek/deepseek-r1
+sudo -u openclaw -i openclaw models fallbacks add openrouter/deepseek/deepseek-r1
 
 # Kimi K2 via OpenRouter (often free)
-sudo -u moltbot -i openclaw models fallbacks add openrouter/moonshotai/kimi-k2
+sudo -u openclaw -i openclaw models fallbacks add openrouter/moonshotai/kimi-k2
 
 # Scan for free models with tool-use support
-sudo -u moltbot -i openclaw models scan
+sudo -u openclaw -i openclaw models scan
 ```
 
 ### 4. Use Google Gemini directly (free tier)
@@ -104,8 +104,8 @@ Anthropic offers flat-rate subscription plans that include API access. If you ar
 Use Gemini Flash as primary with free OpenRouter models as fallbacks:
 
 ```bash
-sudo -u moltbot -i openclaw config set agents.defaults.model google/gemini-2.5-flash
-sudo -u moltbot -i openclaw models fallbacks add openrouter/moonshotai/kimi-k2
+sudo -u openclaw -i openclaw config set agents.defaults.model google/gemini-2.5-flash
+sudo -u openclaw -i openclaw models fallbacks add openrouter/moonshotai/kimi-k2
 ```
 
 ### Balanced (~ $15--$40/month)
@@ -113,9 +113,9 @@ sudo -u moltbot -i openclaw models fallbacks add openrouter/moonshotai/kimi-k2
 Use Claude Sonnet 4.5 as primary with Gemini Flash as fallback:
 
 ```bash
-sudo -u moltbot -i openclaw config set agents.defaults.model anthropic/claude-sonnet-4.5
-sudo -u moltbot -i openclaw models fallbacks add google/gemini-2.5-flash
-sudo -u moltbot -i openclaw models fallbacks add openrouter/deepseek/deepseek-r1
+sudo -u openclaw -i openclaw config set agents.defaults.model anthropic/claude-sonnet-4.5
+sudo -u openclaw -i openclaw models fallbacks add google/gemini-2.5-flash
+sudo -u openclaw -i openclaw models fallbacks add openrouter/deepseek/deepseek-r1
 ```
 
 ### Quality-first (~ $50--$150/month)
@@ -123,9 +123,9 @@ sudo -u moltbot -i openclaw models fallbacks add openrouter/deepseek/deepseek-r1
 Use Claude Opus 4.5 as primary with Sonnet as fallback:
 
 ```bash
-sudo -u moltbot -i openclaw config set agents.defaults.model anthropic/claude-opus-4.5
-sudo -u moltbot -i openclaw models fallbacks add anthropic/claude-sonnet-4.5
-sudo -u moltbot -i openclaw models fallbacks add google/gemini-2.5-pro
+sudo -u openclaw -i openclaw config set agents.defaults.model anthropic/claude-opus-4.5
+sudo -u openclaw -i openclaw models fallbacks add anthropic/claude-sonnet-4.5
+sudo -u openclaw -i openclaw models fallbacks add google/gemini-2.5-pro
 ```
 
 ## Provider Quick Reference

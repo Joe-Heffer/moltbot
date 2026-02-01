@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Moltbot Fallback Configuration Script
+# OpenClaw Fallback Configuration Script
 # Configures AI provider fallbacks based on available API keys
 #
 
@@ -9,10 +9,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/lib.sh"
 
-MOLTBOT_USER="${MOLTBOT_USER:-moltbot}"
-MOLTBOT_HOME="/home/${MOLTBOT_USER}"
-MOLTBOT_CONFIG_DIR="${MOLTBOT_HOME}/.config/moltbot"
-FALLBACK_CONFIG="${SCRIPT_DIR}/moltbot.fallbacks.json"
+OPENCLAW_USER="${OPENCLAW_USER:-openclaw}"
+OPENCLAW_HOME="/home/${OPENCLAW_USER}"
+OPENCLAW_CONFIG_DIR="${OPENCLAW_HOME}/.config/openclaw"
+FALLBACK_CONFIG="${SCRIPT_DIR}/openclaw.fallbacks.json"
 
 # Parse JSON config to get provider/model information
 # Usage: get_json_value <json_file> <jq_path>
@@ -26,7 +26,7 @@ get_json_value() {
 # Usage: has_api_key <env_var_name>
 has_api_key() {
     local key_name="$1"
-    local env_file="${MOLTBOT_CONFIG_DIR}/.env"
+    local env_file="${OPENCLAW_CONFIG_DIR}/.env"
 
     if [[ ! -f "$env_file" ]]; then
         return 1
@@ -90,7 +90,7 @@ configure_fallbacks() {
         skip_if_no_keys=$(get_json_value "$FALLBACK_CONFIG" '.settings.skipIfNoApiKeys')
         if [[ "$skip_if_no_keys" == "true" ]]; then
             log_warn "No API keys configured yet, skipping fallback setup"
-            log_info "Run 'moltbot onboard' or edit ${MOLTBOT_CONFIG_DIR}/.env to add API keys"
+            log_info "Run 'openclaw onboard' or edit ${OPENCLAW_CONFIG_DIR}/.env to add API keys"
             return 0
         fi
     fi
@@ -100,7 +100,7 @@ configure_fallbacks() {
     preserve_existing=$(get_json_value "$FALLBACK_CONFIG" '.settings.preserveExistingConfig')
     if [[ "$preserve_existing" != "true" ]]; then
         log_info "Clearing existing fallback configuration..."
-        sudo -u "$MOLTBOT_USER" -i openclaw models fallbacks clear 2>/dev/null || true
+        sudo -u "$OPENCLAW_USER" -i openclaw models fallbacks clear 2>/dev/null || true
     fi
 
     # Build fallback list from available providers
@@ -129,7 +129,7 @@ configure_fallbacks() {
 
         for model in "${fallback_models[@]}"; do
             log_info "  Adding fallback: ${model}"
-            if sudo -u "$MOLTBOT_USER" -i openclaw models fallbacks add "$model" 2>/dev/null; then
+            if sudo -u "$OPENCLAW_USER" -i openclaw models fallbacks add "$model" 2>/dev/null; then
                 log_success "    Added successfully"
                 ((configured_count++))
             else
@@ -142,21 +142,21 @@ configure_fallbacks() {
 
     # Show final configuration
     log_info "Listing configured fallbacks..."
-    if sudo -u "$MOLTBOT_USER" -i openclaw models fallbacks list 2>/dev/null; then
+    if sudo -u "$OPENCLAW_USER" -i openclaw models fallbacks list 2>/dev/null; then
         log_success "Fallback configuration complete (${configured_count} fallback(s) configured)"
     else
         log_warn "Unable to list fallbacks (openclaw may need to be configured via onboarding first)"
         log_info "You can configure fallbacks later by running:"
-        log_info "  sudo -u ${MOLTBOT_USER} -i openclaw models fallbacks add <provider/model>"
+        log_info "  sudo -u ${OPENCLAW_USER} -i openclaw models fallbacks add <provider/model>"
     fi
 }
 
 main() {
-    # Don't require root - this script can be run by the moltbot user
+    # Don't require root - this script can be run by the openclaw user
     # or by root for initial setup
 
-    if [[ ! -d "$MOLTBOT_CONFIG_DIR" ]]; then
-        log_error "Moltbot config directory not found: ${MOLTBOT_CONFIG_DIR}"
+    if [[ ! -d "$OPENCLAW_CONFIG_DIR" ]]; then
+        log_error "OpenClaw config directory not found: ${OPENCLAW_CONFIG_DIR}"
         log_error "Please run install.sh first"
         exit 1
     fi

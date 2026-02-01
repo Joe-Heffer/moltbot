@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Moltbot Deployment Script
+# OpenClaw Deployment Script
 # Idempotent: handles both first-time installation and subsequent updates.
 # Always regenerates the systemd service so that configuration changes
 # (security hardening, resource limits, paths, etc.) are rolled out on
@@ -14,14 +14,14 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/lib.sh"
 
-MOLTBOT_USER="${MOLTBOT_USER:-moltbot}"
-MOLTBOT_HOME="/home/${MOLTBOT_USER}"
-MOLTBOT_CONFIG_DIR="${MOLTBOT_HOME}/.config/moltbot"
-MOLTBOT_DATA_DIR="${MOLTBOT_HOME}/.local/share/moltbot"
+OPENCLAW_USER="${OPENCLAW_USER:-openclaw}"
+OPENCLAW_HOME="/home/${OPENCLAW_USER}"
+OPENCLAW_CONFIG_DIR="${OPENCLAW_HOME}/.config/openclaw"
+OPENCLAW_DATA_DIR="${OPENCLAW_HOME}/.local/share/openclaw"
 NODE_VERSION="22"
 BREW_PREFIX="/home/linuxbrew/.linuxbrew"
-MOLTBOT_PORT="${MOLTBOT_PORT:-18789}"
-SERVICE_NAME="moltbot-gateway"
+OPENCLAW_PORT="${OPENCLAW_PORT:-18789}"
+SERVICE_NAME="openclaw-gateway"
 OS_FAMILY=""
 TOTAL_RAM_MB=0
 MEMORY_MAX=""
@@ -67,8 +67,8 @@ detect_resources() {
 
     if [[ "$TOTAL_RAM_MB" -lt 2048 ]]; then
         log_error "System has less than 2 GB RAM (minimum requirement)"
-        log_error "Moltbot requires at least 2 GB RAM to run reliably."
-        log_error "See: https://docs.molt.bot/help/faq"
+        log_error "OpenClaw requires at least 2 GB RAM to run reliably."
+        log_error "See: https://docs.openclaw.ai/help/faq"
         exit 1
     elif [[ "$TOTAL_RAM_MB" -lt 4096 ]]; then
         log_warn "System has less than 4 GB RAM (recommended)"
@@ -158,14 +158,14 @@ install_nodejs() {
     log_success "pnpm installed"
 }
 
-create_moltbot_user() {
-    log_info "Creating moltbot user..."
+create_openclaw_user() {
+    log_info "Creating openclaw user..."
 
-    if id "$MOLTBOT_USER" &>/dev/null; then
-        log_info "User ${MOLTBOT_USER} already exists"
+    if id "$OPENCLAW_USER" &>/dev/null; then
+        log_info "User ${OPENCLAW_USER} already exists"
     else
-        useradd -r -m -s /bin/bash -d "$MOLTBOT_HOME" "$MOLTBOT_USER"
-        log_success "User ${MOLTBOT_USER} created"
+        useradd -r -m -s /bin/bash -d "$OPENCLAW_HOME" "$OPENCLAW_USER"
+        log_success "User ${OPENCLAW_USER} created"
     fi
 
     # Create necessary directories with secure permissions
@@ -174,55 +174,55 @@ create_moltbot_user() {
     old_umask=$(umask)
     umask 0077
 
-    mkdir -p "$MOLTBOT_CONFIG_DIR"
-    mkdir -p "$MOLTBOT_DATA_DIR"
-    mkdir -p "${MOLTBOT_HOME}/.npm-global"
+    mkdir -p "$OPENCLAW_CONFIG_DIR"
+    mkdir -p "$OPENCLAW_DATA_DIR"
+    mkdir -p "${OPENCLAW_HOME}/.npm-global"
 
     # Ensure state directories are real directories, not symlinks.
     # A symlink here is a security risk: an attacker who can control the
     # target could redirect state writes to an arbitrary location.
     local dir
-    for dir in "${MOLTBOT_HOME}/.clawdbot" "${MOLTBOT_HOME}/clawd"; do
+    for dir in "${OPENCLAW_HOME}/.clawdbot" "${OPENCLAW_HOME}/clawd"; do
         if [[ -L "$dir" ]]; then
             log_warn "${dir} is a symlink — replacing with a real directory"
             rm -f "$dir"
         fi
     done
 
-    mkdir -p "${MOLTBOT_HOME}/.clawdbot"
-    mkdir -p "${MOLTBOT_HOME}/clawd/memory"
+    mkdir -p "${OPENCLAW_HOME}/.clawdbot"
+    mkdir -p "${OPENCLAW_HOME}/clawd/memory"
 
     # Restore original umask
     umask "$old_umask"
 
     # Ensure restrictive permissions on sensitive directories
-    chmod 700 "${MOLTBOT_HOME}/.clawdbot"
-    chmod 700 "${MOLTBOT_HOME}/clawd"
+    chmod 700 "${OPENCLAW_HOME}/.clawdbot"
+    chmod 700 "${OPENCLAW_HOME}/clawd"
 
     # Ensure npm prefix is configured.
     # Write .npmrc directly to avoid sudo HOME environment issues
     # (sudo -u without -H keeps caller's HOME, so npm config set
     # would write to the wrong .npmrc).
     # Also fixes missing .npmrc from earlier installs.
-    cat > "${MOLTBOT_HOME}/.npmrc" << NPMRC
-prefix=${MOLTBOT_HOME}/.npm-global
+    cat > "${OPENCLAW_HOME}/.npmrc" << NPMRC
+prefix=${OPENCLAW_HOME}/.npm-global
 NPMRC
-    chmod 644 "${MOLTBOT_HOME}/.npmrc"
-    chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_HOME}/.npmrc"
+    chmod 644 "${OPENCLAW_HOME}/.npmrc"
+    chown "${OPENCLAW_USER}:${OPENCLAW_USER}" "${OPENCLAW_HOME}/.npmrc"
 
     # Ensure PATH includes npm global bin in shell profiles.
-    # useradd -r (system user) skips /etc/skel, so the moltbot user may
-    # have no .profile at all.  Login shells (sudo -u moltbot -i) read
+    # useradd -r (system user) skips /etc/skel, so the openclaw user may
+    # have no .profile at all.  Login shells (sudo -u openclaw -i) read
     # .profile / .bash_profile — not .bashrc — so the PATH must be set
     # there.  We also keep .bashrc for interactive non-login shells.
-    if ! grep -q ".npm-global/bin" "${MOLTBOT_HOME}/.bashrc" 2>/dev/null; then
-        echo 'export PATH="${HOME}/.npm-global/bin:${PATH}"' >> "${MOLTBOT_HOME}/.bashrc"
-        chmod 644 "${MOLTBOT_HOME}/.bashrc"
+    if ! grep -q ".npm-global/bin" "${OPENCLAW_HOME}/.bashrc" 2>/dev/null; then
+        echo 'export PATH="${HOME}/.npm-global/bin:${PATH}"' >> "${OPENCLAW_HOME}/.bashrc"
+        chmod 644 "${OPENCLAW_HOME}/.bashrc"
     fi
-    if [[ ! -f "${MOLTBOT_HOME}/.profile" ]]; then
+    if [[ ! -f "${OPENCLAW_HOME}/.profile" ]]; then
         # Create a minimal .profile that mirrors the Ubuntu /etc/skel default:
         # source .bashrc (if it exists) and set the npm-global PATH for login shells.
-        cat > "${MOLTBOT_HOME}/.profile" << 'PROFILE'
+        cat > "${OPENCLAW_HOME}/.profile" << 'PROFILE'
 # ~/.profile: executed by the command interpreter for login shells.
 
 # if running bash, include .bashrc if it exists
@@ -237,38 +237,38 @@ if [ -d "$HOME/.npm-global/bin" ]; then
     PATH="$HOME/.npm-global/bin:$PATH"
 fi
 PROFILE
-        chmod 644 "${MOLTBOT_HOME}/.profile"
-        chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_HOME}/.profile"
-    elif ! grep -q ".npm-global/bin" "${MOLTBOT_HOME}/.profile" 2>/dev/null; then
-        echo 'export PATH="${HOME}/.npm-global/bin:${PATH}"' >> "${MOLTBOT_HOME}/.profile"
-        chmod 644 "${MOLTBOT_HOME}/.profile"
+        chmod 644 "${OPENCLAW_HOME}/.profile"
+        chown "${OPENCLAW_USER}:${OPENCLAW_USER}" "${OPENCLAW_HOME}/.profile"
+    elif ! grep -q ".npm-global/bin" "${OPENCLAW_HOME}/.profile" 2>/dev/null; then
+        echo 'export PATH="${HOME}/.npm-global/bin:${PATH}"' >> "${OPENCLAW_HOME}/.profile"
+        chmod 644 "${OPENCLAW_HOME}/.profile"
     fi
 
     # Add Homebrew (Linuxbrew) environment to shell profiles so that
-    # interactive shells (sudo -u moltbot -i) and the moltbot application
+    # interactive shells (sudo -u openclaw -i) and the openclaw application
     # can locate the brew binary and brew-installed packages.
-    if ! grep -q "linuxbrew" "${MOLTBOT_HOME}/.bashrc" 2>/dev/null; then
-        cat >> "${MOLTBOT_HOME}/.bashrc" << 'BREWRC'
+    if ! grep -q "linuxbrew" "${OPENCLAW_HOME}/.bashrc" 2>/dev/null; then
+        cat >> "${OPENCLAW_HOME}/.bashrc" << 'BREWRC'
 
 # Homebrew (Linuxbrew)
 if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 BREWRC
-        chmod 644 "${MOLTBOT_HOME}/.bashrc"
+        chmod 644 "${OPENCLAW_HOME}/.bashrc"
     fi
-    if ! grep -q "linuxbrew" "${MOLTBOT_HOME}/.profile" 2>/dev/null; then
-        cat >> "${MOLTBOT_HOME}/.profile" << 'BREWPROFILE'
+    if ! grep -q "linuxbrew" "${OPENCLAW_HOME}/.profile" 2>/dev/null; then
+        cat >> "${OPENCLAW_HOME}/.profile" << 'BREWPROFILE'
 
 # Homebrew (Linuxbrew)
 if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 BREWPROFILE
-        chmod 644 "${MOLTBOT_HOME}/.profile"
+        chmod 644 "${OPENCLAW_HOME}/.profile"
     fi
 
-    chown -R "${MOLTBOT_USER}:${MOLTBOT_USER}" "$MOLTBOT_HOME"
+    chown -R "${OPENCLAW_USER}:${OPENCLAW_USER}" "$OPENCLAW_HOME"
     log_success "Directories configured"
 }
 
@@ -280,7 +280,7 @@ install_homebrew() {
     # Check if Homebrew is already installed
     if [[ -x "$brew_bin" ]]; then
         local brew_version
-        brew_version=$(sudo -u "$MOLTBOT_USER" "$brew_bin" --version 2>/dev/null | head -1 || echo "unknown")
+        brew_version=$(sudo -u "$OPENCLAW_USER" "$brew_bin" --version 2>/dev/null | head -1 || echo "unknown")
         log_info "Homebrew already installed: ${brew_version}"
         return 0
     fi
@@ -288,23 +288,23 @@ install_homebrew() {
     # Create the Homebrew prefix directory with moltbot ownership.
     # Homebrew on Linux installs to /home/linuxbrew/.linuxbrew by convention.
     mkdir -p "${BREW_PREFIX}"
-    chown -R "${MOLTBOT_USER}:${MOLTBOT_USER}" /home/linuxbrew
+    chown -R "${OPENCLAW_USER}:${OPENCLAW_USER}" /home/linuxbrew
 
     # Install Homebrew via git clone (manual method).
     # The interactive installer script requires sudo access from the installing
     # user, which the moltbot system user does not have.  The git clone approach
     # is the officially documented alternative for automated/non-interactive
     # environments.
-    if ! sudo -u "$MOLTBOT_USER" git clone https://github.com/Homebrew/brew "${BREW_PREFIX}/Homebrew"; then
+    if ! sudo -u "$OPENCLAW_USER" git clone https://github.com/Homebrew/brew "${BREW_PREFIX}/Homebrew"; then
         log_warn "Failed to clone Homebrew repository — skills requiring brew will not work"
         return 0
     fi
 
-    sudo -u "$MOLTBOT_USER" mkdir -p "${BREW_PREFIX}/bin"
-    sudo -u "$MOLTBOT_USER" ln -sf ../Homebrew/bin/brew "${brew_bin}"
+    sudo -u "$OPENCLAW_USER" mkdir -p "${BREW_PREFIX}/bin"
+    sudo -u "$OPENCLAW_USER" ln -sf ../Homebrew/bin/brew "${brew_bin}"
 
     # Run initial setup (downloads tap metadata)
-    sudo -u "$MOLTBOT_USER" "${brew_bin}" update --force --quiet || {
+    sudo -u "$OPENCLAW_USER" "${brew_bin}" update --force --quiet || {
         log_warn "Homebrew initial setup incomplete — run 'brew update' manually to finish"
     }
 
@@ -315,54 +315,54 @@ install_homebrew() {
     fi
 
     local brew_version
-    brew_version=$(sudo -u "$MOLTBOT_USER" "$brew_bin" --version 2>/dev/null | head -1 || echo "unknown")
+    brew_version=$(sudo -u "$OPENCLAW_USER" "$brew_bin" --version 2>/dev/null | head -1 || echo "unknown")
     log_success "Homebrew installed: ${brew_version}"
 }
 
-install_moltbot() {
-    log_info "Installing/updating moltbot..."
+install_openclaw() {
+    log_info "Installing/updating openclaw..."
 
     # Show current version if already installed
-    if command -v moltbot &> /dev/null; then
+    if command -v openclaw &> /dev/null; then
         local current_version
-        current_version=$(sudo -u "$MOLTBOT_USER" -i moltbot --version 2>/dev/null || echo "unknown")
+        current_version=$(sudo -u "$OPENCLAW_USER" -i openclaw --version 2>/dev/null || echo "unknown")
         log_info "Current version: ${current_version}"
     fi
 
     # Clean up stale npm temporary directories that cause ENOTEMPTY on reinstall.
     # npm renames the existing package to a dotfile before replacing it; if a
     # previous run was interrupted these leftovers block the next attempt.
-    local npm_modules="${MOLTBOT_HOME}/.npm-global/lib/node_modules"
+    local npm_modules="${OPENCLAW_HOME}/.npm-global/lib/node_modules"
     if [[ -d "$npm_modules" ]]; then
-        find "$npm_modules" -maxdepth 1 -name '.moltbot-*' -type d -exec rm -rf {} + 2>/dev/null || true
+        find "$npm_modules" -maxdepth 1 -name '.openclaw-*' -type d -exec rm -rf {} + 2>/dev/null || true
     fi
 
     # Ensure enough memory for npm install (OOM-killed on low-memory VPS)
     ensure_swap_for_install
 
-    # Install/update moltbot as the moltbot user (-i loads login shell which sets HOME)
-    sudo -u "$MOLTBOT_USER" -i npm install -g openclaw@latest
+    # Install/update openclaw as the openclaw user (-i loads login shell which sets HOME)
+    sudo -u "$OPENCLAW_USER" -i npm install -g openclaw@latest
 
     remove_temp_swap
 
     # Verify binary was installed to the correct location
-    if [[ ! -x "${MOLTBOT_HOME}/.npm-global/bin/moltbot" ]]; then
-        log_error "moltbot binary not found at ${MOLTBOT_HOME}/.npm-global/bin/moltbot"
+    if [[ ! -x "${OPENCLAW_HOME}/.npm-global/bin/openclaw" ]]; then
+        log_error "openclaw binary not found at ${OPENCLAW_HOME}/.npm-global/bin/openclaw"
         log_error "npm prefix may not be configured correctly"
-        log_error "Contents of ${MOLTBOT_HOME}/.npmrc:"
-        cat "${MOLTBOT_HOME}/.npmrc" 2>/dev/null || echo "(file not found)"
+        log_error "Contents of ${OPENCLAW_HOME}/.npmrc:"
+        cat "${OPENCLAW_HOME}/.npmrc" 2>/dev/null || echo "(file not found)"
         log_error "npm global prefix reported by npm:"
-        sudo -u "$MOLTBOT_USER" -i npm prefix -g 2>/dev/null || echo "(unable to determine)"
+        sudo -u "$OPENCLAW_USER" -i npm prefix -g 2>/dev/null || echo "(unable to determine)"
         exit 1
     fi
 
-    # Create a symlink in /usr/local/bin so that `moltbot` is on the default
+    # Create a symlink in /usr/local/bin so that `openclaw` is on the default
     # PATH for all users and shell types (login, non-login, sudo without -i).
-    ln -sf "${MOLTBOT_HOME}/.npm-global/bin/moltbot" /usr/local/bin/moltbot
+    ln -sf "${OPENCLAW_HOME}/.npm-global/bin/openclaw" /usr/local/bin/openclaw
 
     local new_version
-    new_version=$(sudo -u "$MOLTBOT_USER" -i moltbot --version 2>/dev/null || echo "unknown")
-    log_success "Moltbot version: ${new_version}"
+    new_version=$(sudo -u "$OPENCLAW_USER" -i openclaw --version 2>/dev/null || echo "unknown")
+    log_success "OpenClaw version: ${new_version}"
 }
 
 setup_systemd_service() {
@@ -373,7 +373,7 @@ setup_systemd_service() {
     # every deployment — not just on first install.
 
     # Read the template and substitute placeholders with actual values
-    local template_file="${SCRIPT_DIR}/moltbot-gateway.service"
+    local template_file="${SCRIPT_DIR}/openclaw-gateway.service"
 
     if [[ ! -f "$template_file" ]]; then
         log_error "Service template not found: ${template_file}"
@@ -381,15 +381,15 @@ setup_systemd_service() {
     fi
 
     # Perform variable substitution and write to systemd directory
-    sed -e "s|{{MOLTBOT_USER}}|${MOLTBOT_USER}|g" \
-        -e "s|{{MOLTBOT_HOME}}|${MOLTBOT_HOME}|g" \
-        -e "s|{{MOLTBOT_CONFIG_DIR}}|${MOLTBOT_CONFIG_DIR}|g" \
-        -e "s|{{MOLTBOT_DATA_DIR}}|${MOLTBOT_DATA_DIR}|g" \
+    sed -e "s|{{OPENCLAW_USER}}|${OPENCLAW_USER}|g" \
+        -e "s|{{OPENCLAW_HOME}}|${OPENCLAW_HOME}|g" \
+        -e "s|{{OPENCLAW_CONFIG_DIR}}|${OPENCLAW_CONFIG_DIR}|g" \
+        -e "s|{{OPENCLAW_DATA_DIR}}|${OPENCLAW_DATA_DIR}|g" \
         -e "s|{{NODE_HEAP_SIZE}}|${NODE_HEAP_SIZE}|g" \
         -e "s|{{MEMORY_MAX}}|${MEMORY_MAX}|g" \
         -e "s|{{BREW_PREFIX}}|${BREW_PREFIX}|g" \
-        -e "s|{{MOLTBOT_PORT}}|${MOLTBOT_PORT}|g" \
-        "$template_file" > /etc/systemd/system/moltbot-gateway.service
+        -e "s|{{OPENCLAW_PORT}}|${OPENCLAW_PORT}|g" \
+        "$template_file" > /etc/systemd/system/openclaw-gateway.service
 
     # Reload systemd
     systemctl daemon-reload
@@ -401,52 +401,52 @@ setup_backup_service() {
     log_info "Installing backup systemd service and timer..."
 
     # Copy backup service and timer to systemd
-    cp "${SCRIPT_DIR}/moltbot-backup.service" /etc/systemd/system/moltbot-backup.service
-    cp "${SCRIPT_DIR}/moltbot-backup.timer" /etc/systemd/system/moltbot-backup.timer
+    cp "${SCRIPT_DIR}/openclaw-backup.service" /etc/systemd/system/openclaw-backup.service
+    cp "${SCRIPT_DIR}/openclaw-backup.timer" /etc/systemd/system/openclaw-backup.timer
 
     # Reload systemd to pick up new units
     systemctl daemon-reload
 
     log_info "Backup service installed (not enabled by default)"
     log_info "To enable automated backups:"
-    log_info "  1. Copy and configure ${MOLTBOT_CONFIG_DIR}/backup.conf.template to ${MOLTBOT_CONFIG_DIR}/backup.conf"
-    log_info "  2. Run: sudo systemctl enable --now moltbot-backup.timer"
+    log_info "  1. Copy and configure ${OPENCLAW_CONFIG_DIR}/backup.conf.template to ${OPENCLAW_CONFIG_DIR}/backup.conf"
+    log_info "  2. Run: sudo systemctl enable --now openclaw-backup.timer"
 }
 
 copy_env_template() {
     log_info "Creating environment template..."
 
-    if [[ -f "${SCRIPT_DIR}/moltbot.env.template" ]]; then
-        cp "${SCRIPT_DIR}/moltbot.env.template" "${MOLTBOT_CONFIG_DIR}/moltbot.env.template"
-        chmod 644 "${MOLTBOT_CONFIG_DIR}/moltbot.env.template"
-        chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_CONFIG_DIR}/moltbot.env.template"
-        log_success "Environment template copied to ${MOLTBOT_CONFIG_DIR}"
+    if [[ -f "${SCRIPT_DIR}/openclaw.env.template" ]]; then
+        cp "${SCRIPT_DIR}/openclaw.env.template" "${OPENCLAW_CONFIG_DIR}/openclaw.env.template"
+        chmod 644 "${OPENCLAW_CONFIG_DIR}/openclaw.env.template"
+        chown "${OPENCLAW_USER}:${OPENCLAW_USER}" "${OPENCLAW_CONFIG_DIR}/openclaw.env.template"
+        log_success "Environment template copied to ${OPENCLAW_CONFIG_DIR}"
 
         # Create .env from template if it doesn't already exist
-        if [[ ! -f "${MOLTBOT_CONFIG_DIR}/.env" ]]; then
-            cp "${SCRIPT_DIR}/moltbot.env.template" "${MOLTBOT_CONFIG_DIR}/.env"
-            chmod 600 "${MOLTBOT_CONFIG_DIR}/.env"
-            chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_CONFIG_DIR}/.env"
-            log_warn "Created ${MOLTBOT_CONFIG_DIR}/.env from template — edit it to add your API keys before starting the service"
+        if [[ ! -f "${OPENCLAW_CONFIG_DIR}/.env" ]]; then
+            cp "${SCRIPT_DIR}/openclaw.env.template" "${OPENCLAW_CONFIG_DIR}/.env"
+            chmod 600 "${OPENCLAW_CONFIG_DIR}/.env"
+            chown "${OPENCLAW_USER}:${OPENCLAW_USER}" "${OPENCLAW_CONFIG_DIR}/.env"
+            log_warn "Created ${OPENCLAW_CONFIG_DIR}/.env from template — edit it to add your API keys before starting the service"
         else
-            log_info "Existing .env file preserved at ${MOLTBOT_CONFIG_DIR}/.env"
+            log_info "Existing .env file preserved at ${OPENCLAW_CONFIG_DIR}/.env"
         fi
     fi
 
     # Copy fallback configuration template
-    if [[ -f "${SCRIPT_DIR}/moltbot.fallbacks.json" ]]; then
-        cp "${SCRIPT_DIR}/moltbot.fallbacks.json" "${MOLTBOT_CONFIG_DIR}/moltbot.fallbacks.json"
-        chmod 644 "${MOLTBOT_CONFIG_DIR}/moltbot.fallbacks.json"
-        chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_CONFIG_DIR}/moltbot.fallbacks.json"
-        log_success "Fallback configuration template copied to ${MOLTBOT_CONFIG_DIR}"
+    if [[ -f "${SCRIPT_DIR}/openclaw.fallbacks.json" ]]; then
+        cp "${SCRIPT_DIR}/openclaw.fallbacks.json" "${OPENCLAW_CONFIG_DIR}/openclaw.fallbacks.json"
+        chmod 644 "${OPENCLAW_CONFIG_DIR}/openclaw.fallbacks.json"
+        chown "${OPENCLAW_USER}:${OPENCLAW_USER}" "${OPENCLAW_CONFIG_DIR}/openclaw.fallbacks.json"
+        log_success "Fallback configuration template copied to ${OPENCLAW_CONFIG_DIR}"
     fi
 
     # Copy backup configuration template
     if [[ -f "${SCRIPT_DIR}/backup.conf.template" ]]; then
-        cp "${SCRIPT_DIR}/backup.conf.template" "${MOLTBOT_CONFIG_DIR}/backup.conf.template"
-        chmod 644 "${MOLTBOT_CONFIG_DIR}/backup.conf.template"
-        chown "${MOLTBOT_USER}:${MOLTBOT_USER}" "${MOLTBOT_CONFIG_DIR}/backup.conf.template"
-        log_info "Backup configuration template copied to ${MOLTBOT_CONFIG_DIR}"
+        cp "${SCRIPT_DIR}/backup.conf.template" "${OPENCLAW_CONFIG_DIR}/backup.conf.template"
+        chmod 644 "${OPENCLAW_CONFIG_DIR}/backup.conf.template"
+        chown "${OPENCLAW_USER}:${OPENCLAW_USER}" "${OPENCLAW_CONFIG_DIR}/backup.conf.template"
+        log_info "Backup configuration template copied to ${OPENCLAW_CONFIG_DIR}"
     fi
 }
 
@@ -514,7 +514,7 @@ wait_for_healthy() {
             fi
 
             # Check if configured port is listening
-            if ss -tln 2>/dev/null | grep -q ":${MOLTBOT_PORT}\b"; then
+            if ss -tln 2>/dev/null | grep -q ":${OPENCLAW_PORT}\b"; then
                 echo ""
                 log_success "Service is healthy (${attempt}s)"
                 return 0
@@ -537,7 +537,7 @@ configure_trusted_proxies() {
     # value into gateway.trustedProxies so the moltbot gateway reads the
     # real client IP from X-Forwarded-For headers behind a reverse proxy.
     local proxies="${GATEWAY_TRUSTED_PROXIES:-}"
-    local env_file="${MOLTBOT_CONFIG_DIR}/.env"
+    local env_file="${OPENCLAW_CONFIG_DIR}/.env"
 
     # Fall back to the .env file if the variable is not in the environment.
     if [[ -z "$proxies" && -f "$env_file" ]]; then
@@ -559,20 +559,20 @@ configure_trusted_proxies() {
                  | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
                  | jq -R . | jq -sc .)
 
-    if sudo -u "$MOLTBOT_USER" -i moltbot config set gateway.trustedProxies "$json_array" 2>/dev/null; then
+    if sudo -u "$OPENCLAW_USER" -i openclaw config set gateway.trustedProxies "$json_array" 2>/dev/null; then
         log_success "gateway.trustedProxies set to ${json_array}"
     else
-        log_warn "Could not set gateway.trustedProxies — configure manually with: moltbot config set gateway.trustedProxies '${json_array}'"
+        log_warn "Could not set gateway.trustedProxies — configure manually with: openclaw config set gateway.trustedProxies '${json_array}'"
     fi
 }
 
 run_doctor() {
-    log_info "Running moltbot doctor --repair..."
-    sudo -u "$MOLTBOT_USER" -i moltbot doctor --repair 2>/dev/null || true
+    log_info "Running openclaw doctor --repair..."
+    sudo -u "$OPENCLAW_USER" -i openclaw doctor --repair 2>/dev/null || true
 }
 
 save_deploy_version() {
-    # Save the repo VERSION to /opt/moltbot-version for deployment tracking.
+    # Save the repo VERSION to /opt/openclaw-version for deployment tracking.
     # Previously this was done in the CI workflow with sudo tee/chown, but
     # those commands were not covered by the deploy user's sudoers rules,
     # causing "a terminal is required to read the password" errors.
@@ -581,9 +581,9 @@ save_deploy_version() {
     if [[ -f "$version_file" ]]; then
         local version
         version=$(cat "$version_file")
-        echo "$version" > /opt/moltbot-version
-        chown "${MOLTBOT_USER}:${MOLTBOT_USER}" /opt/moltbot-version
-        chmod 644 /opt/moltbot-version
+        echo "$version" > /opt/openclaw-version
+        chown "${OPENCLAW_USER}:${OPENCLAW_USER}" /opt/openclaw-version
+        chmod 644 /opt/openclaw-version
         log_info "Deploy version saved: ${version}"
     fi
 }
@@ -597,41 +597,41 @@ show_status() {
 print_first_install_steps() {
     echo ""
     echo "=============================================="
-    echo -e "${LIB_GREEN}Moltbot installation complete!${LIB_NC}"
+    echo -e "${LIB_GREEN}OpenClaw installation complete!${LIB_NC}"
     echo "=============================================="
     echo ""
     echo "Next steps:"
     echo ""
-    echo "1. Run the onboarding wizard as the moltbot user:"
-    echo "   sudo -u ${MOLTBOT_USER} -i moltbot onboard"
+    echo "1. Run the onboarding wizard as the openclaw user:"
+    echo "   sudo -u ${OPENCLAW_USER} -i openclaw onboard"
     echo ""
     echo "2. Start the service:"
-    echo "   sudo systemctl start moltbot-gateway"
-    echo "   sudo systemctl enable moltbot-gateway"
+    echo "   sudo systemctl start openclaw-gateway"
+    echo "   sudo systemctl enable openclaw-gateway"
     echo ""
     echo "3. Check service status:"
-    echo "   sudo systemctl status moltbot-gateway"
-    echo "   sudo journalctl -u moltbot-gateway -f"
+    echo "   sudo systemctl status openclaw-gateway"
+    echo "   sudo journalctl -u openclaw-gateway -f"
     echo ""
     echo "4. Access the Gateway UI at:"
-    echo "   http://<your-vm-ip>:${MOLTBOT_PORT}"
+    echo "   http://<your-vm-ip>:${OPENCLAW_PORT}"
     echo ""
-    echo "Configuration directory: ${MOLTBOT_CONFIG_DIR}"
-    echo "Data directory: ${MOLTBOT_DATA_DIR}"
+    echo "Configuration directory: ${OPENCLAW_CONFIG_DIR}"
+    echo "Data directory: ${OPENCLAW_DATA_DIR}"
     echo ""
     echo "Security recommendations:"
     echo "  - Use Tailscale for secure remote access"
     echo "  - Configure DM pairing policies"
-    echo "  - Run 'moltbot doctor' to check configuration"
+    echo "  - Run 'openclaw doctor' to check configuration"
     echo ""
 }
 
 main() {
-    log_info "Starting Moltbot deployment..."
+    log_info "Starting OpenClaw deployment..."
     echo ""
 
     require_root
-    validate_port "$MOLTBOT_PORT" "MOLTBOT_PORT"
+    validate_port "$OPENCLAW_PORT" "OPENCLAW_PORT"
 
     # Check whether the service is already running (i.e. this is an update,
     # not a first-time install).  We use this later to decide whether to
@@ -653,13 +653,13 @@ main() {
     install_nodejs
 
     DEPLOY_PHASE="user creation"
-    create_moltbot_user
+    create_openclaw_user
 
     DEPLOY_PHASE="Homebrew installation"
     install_homebrew
 
-    DEPLOY_PHASE="moltbot installation"
-    install_moltbot
+    DEPLOY_PHASE="openclaw installation"
+    install_openclaw
 
     DEPLOY_PHASE="systemd setup"
     setup_systemd_service

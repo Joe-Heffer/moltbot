@@ -7,19 +7,19 @@ Common issues when running OpenClaw on a Linux VPS and how to resolve them.
 Always start by checking the service journal:
 
 ```bash
-sudo journalctl -u moltbot-gateway -n 50 --no-pager
+sudo journalctl -u openclaw-gateway -n 50 --no-pager
 ```
 
 Follow logs in real time:
 
 ```bash
-sudo journalctl -u moltbot-gateway -f
+sudo journalctl -u openclaw-gateway -f
 ```
 
 Check service status:
 
 ```bash
-sudo systemctl status moltbot-gateway
+sudo systemctl status openclaw-gateway
 ```
 
 ## Common Issues
@@ -36,7 +36,7 @@ Your Telegram user id: 123456789
 Pairing code: abc123
 
 Ask the bot owner to approve with:
-moltbot pairing approve telegram <code>
+`openclaw pairing approve telegram <code>
 ```
 
 **Cause:** The default `DM_POLICY=pairing` setting requires the bot owner to approve every new contact before they can use the bot.
@@ -44,7 +44,7 @@ moltbot pairing approve telegram <code>
 **Fix:** Approve the pairing code via the CLI:
 
 ```bash
-sudo -u moltbot -i moltbot pairing approve <channel> <code>
+sudo -u openclaw -i openclaw pairing approve <channel> <code>
 ```
 
 Replace `<channel>` and `<code>` with the values from the bot's message. After approval, the user can chat normally. See the [Telegram Setup Guide](./TELEGRAM_SETUP.md#step-5-approve-the-pairing-request) for details.
@@ -70,7 +70,7 @@ The `(expected one of: )` list is empty — no channels are registered for pairi
 **Workaround:** Set `DM_POLICY=open` to bypass pairing entirely:
 
 ```bash
-sudo -u moltbot nano /home/moltbot/.config/moltbot/.env
+sudo -u openclaw nano /home/openclaw/.config/openclaw/.env
 ```
 
 Set or add:
@@ -82,7 +82,7 @@ DM_POLICY=open
 Then restart:
 
 ```bash
-sudo systemctl restart moltbot-gateway
+sudo systemctl restart openclaw-gateway
 ```
 
 The bot will now respond to all Telegram messages without requiring approval. Switch back to `DM_POLICY=pairing` once a fixed version is released. See the [Telegram Setup Guide](./TELEGRAM_SETUP.md#workaround-set-dm_policyopen) for details.
@@ -101,7 +101,7 @@ Accounts / Unsupported schema node. Use Raw mode.
 
 1. SSH into your server and edit the environment file:
    ```bash
-   sudo -u moltbot nano /home/moltbot/.config/moltbot/.env
+   sudo -u openclaw nano /home/openclaw/.config/openclaw/.env
    ```
 
 2. Add or uncomment the Telegram configuration:
@@ -111,7 +111,7 @@ Accounts / Unsupported schema node. Use Raw mode.
 
 3. Restart the service to apply changes:
    ```bash
-   sudo systemctl restart moltbot-gateway
+   sudo systemctl restart openclaw-gateway
    ```
 
 See the [Telegram Setup Guide](./TELEGRAM_SETUP.md) for detailed instructions on obtaining a bot token from @BotFather and configuring security settings.
@@ -141,7 +141,7 @@ Alternatively, if the Gateway UI offers a "Raw mode" option for the Telegram con
 If you already have a conversation with the bot, you can also find your chat ID by checking the service logs:
 
 ```bash
-sudo journalctl -u moltbot-gateway -n 50 --no-pager | grep -i "chat"
+sudo journalctl -u openclaw-gateway -n 50 --no-pager | grep -i "chat"
 ```
 
 ### "No API key found for provider 'openai-codex'" crash
@@ -149,10 +149,10 @@ sudo journalctl -u moltbot-gateway -n 50 --no-pager | grep -i "chat"
 **Symptom:** The service crashes with an error in the journal:
 
 ```
-No API key found for provider 'openai-codex'. Auth store: /home/moltbot/.clawdbot/agents/main/agent/auth-profiles.json
+No API key found for provider 'openai-codex'. Auth store: /home/openclaw/clawd/agents/main/agent/auth-profiles.json
 ```
 
-> **Note:** If you see `.clawdbot` in the error path instead of `clawd`, this was caused by missing environment variables in older deployment configurations. The systemd service now sets `OPENCLAW_STATE_DIR=/home/moltbot/clawd` to use the correct workspace directory. This issue was related to the project's rename history (clawbot → moltbot → openclaw). **Fix:** Redeploy with `sudo bash deploy/deploy.sh` to update the systemd service configuration.
+> **Note:** If you see `.openclaw` in the error path instead of `clawd`, this was caused by missing environment variables in older deployment configurations. The systemd service now sets `OPENCLAW_STATE_DIR=/home/openclaw/clawd` to use the correct workspace directory. This issue was related to the project's rename history (clawbot → moltbot → openclaw). **Fix:** Redeploy with `sudo bash deploy/deploy.sh` to update the systemd service configuration.
 
 The agent crashes instead of gracefully handling the missing API key.
 
@@ -167,7 +167,7 @@ The agent crashes instead of gracefully handling the missing API key.
 **Workaround:** The OpenAI API key can be used for both standard OpenAI models and Codex access. Configure your OpenAI API key in the environment file:
 
 ```bash
-sudo -u moltbot nano /home/moltbot/.config/moltbot/.env
+sudo -u openclaw nano /home/openclaw/.config/openclaw/.env
 ```
 
 Ensure `OPENAI_API_KEY` is set:
@@ -180,16 +180,16 @@ Then configure the agent's auth profile to use the same key for codex:
 
 ```bash
 # Run onboarding if not already done
-sudo -u moltbot -i moltbot onboard
+sudo -u openclaw -i openclaw onboard
 
 # Or manually configure the OpenAI provider
-sudo -u moltbot -i moltbot config set providers.openai.apiKey "$OPENAI_API_KEY"
+sudo -u openclaw -i openclaw config set providers.openai.apiKey "$OPENAI_API_KEY"
 ```
 
 Finally, restart the service:
 
 ```bash
-sudo systemctl restart moltbot-gateway
+sudo systemctl restart openclaw-gateway
 ```
 
 **Note:** If you don't have an OpenAI API key and don't need code generation features, this is a bug that should be reported to the OpenClaw project. The agent should not crash when optional providers are unavailable.
@@ -202,33 +202,33 @@ sudo systemctl restart moltbot-gateway
 
 ```
 Missing config. Run `moltbot config`...
-moltbot-gateway.service: Main process exited, code=exited, status=1/FAILURE
+openclaw-gateway.service: Main process exited, code=exited, status=1/FAILURE
 ```
 
 The service enters a restart loop because `Restart=always` is set in the systemd unit.
 
-**Cause:** Moltbot has no configuration file. The `moltbot gateway` process requires configuration (API keys, channel settings) before it can run.
+**Cause:** OpenClaw has no configuration file. The `moltbot gateway` process requires configuration (API keys, channel settings) before it can run.
 
-**Fix:** Run the interactive configuration wizard as the `moltbot` system user:
+**Fix:** Run the interactive configuration wizard as the `openclaw` system user:
 
 ```bash
-sudo -u moltbot -i moltbot config
+sudo -u openclaw -i openclaw config
 ```
 
-This creates `/home/moltbot/.config/moltbot/.env` with your settings. Then restart the service:
+This creates `/home/openclaw/.config/openclaw/.env` with your settings. Then restart the service:
 
 ```bash
-sudo systemctl restart moltbot-gateway
+sudo systemctl restart openclaw-gateway
 ```
 
 Alternatively, you can copy and edit the environment template directly:
 
 ```bash
-sudo cp /home/moltbot/.config/moltbot/moltbot.env.template /home/moltbot/.config/moltbot/.env
-sudo chown moltbot:moltbot /home/moltbot/.config/moltbot/.env
-sudo chmod 600 /home/moltbot/.config/moltbot/.env
-sudo nano /home/moltbot/.config/moltbot/.env   # add your API keys
-sudo systemctl restart moltbot-gateway
+sudo cp /home/openclaw/.config/openclaw/openclaw.env.template /home/openclaw/.config/openclaw/.env
+sudo chown openclaw:openclaw /home/openclaw/.config/openclaw/.env
+sudo chmod 600 /home/openclaw/.config/openclaw/.env
+sudo nano /home/openclaw/.config/openclaw/.env   # add your API keys
+sudo systemctl restart openclaw-gateway
 ```
 
 ### Service fails health check after update
@@ -250,7 +250,7 @@ sudo systemctl restart moltbot-gateway
 
 ```bash
 # Check journal for the actual error
-sudo journalctl -u moltbot-gateway -n 30 --no-pager
+sudo journalctl -u openclaw-gateway -n 30 --no-pager
 
 # Check if the port is in use by another process
 sudo ss -tlnp | grep 18789
@@ -273,7 +273,7 @@ sudo dmesg | grep -i "oom\|killed process" | tail -5
 **Fix:** Check the journal for the underlying error — usually "Missing config" or an unhandled exception:
 
 ```bash
-sudo journalctl -u moltbot-gateway --since "5 minutes ago" --no-pager
+sudo journalctl -u openclaw-gateway --since "5 minutes ago" --no-pager
 ```
 
 ### `export: '-g' not a valid identifier`
@@ -282,7 +282,7 @@ sudo journalctl -u moltbot-gateway --since "5 minutes ago" --no-pager
 
 ```
 bash: line 1: export: `-g': not a valid identifier
-bash: line 1: export: `moltbot@beta': not a valid identifier
+bash: line 1: export: `openclaw@beta': not a valid identifier
 ```
 
 **Cause:** An older version of the deploy script passed the npm install arguments incorrectly. This was fixed in [PR #34](https://github.com/Joe-Heffer/moltbot/pull/34).
@@ -290,7 +290,7 @@ bash: line 1: export: `moltbot@beta': not a valid identifier
 **Fix:** Pull the latest version of the deploy scripts:
 
 ```bash
-cd ~/moltbot && git pull
+cd ~/openclaw-deployment && git pull
 sudo bash deploy/deploy.sh
 ```
 
@@ -319,27 +319,27 @@ sudo rm /swapfile
 
 ### Service cannot write to config or data directories
 
-**Symptom:** The journal shows permission errors writing to `/home/moltbot/.config/moltbot/` or `/home/moltbot/.local/share/moltbot/`.
+**Symptom:** The journal shows permission errors writing to `/home/openclaw/.config/openclaw/` or `/home/openclaw/.local/share/openclaw/`.
 
 **Cause:** The systemd unit uses `ProtectHome=read-only` and only allows writes to specific paths via `ReadWritePaths`. If the directories don't exist or have wrong ownership, writes fail.
 
 **Fix:**
 
 ```bash
-sudo mkdir -p /home/moltbot/.config/moltbot /home/moltbot/.local/share/moltbot
-sudo chown -R moltbot:moltbot /home/moltbot/.config/moltbot /home/moltbot/.local/share/moltbot
-sudo systemctl restart moltbot-gateway
+sudo mkdir -p /home/openclaw/.config/openclaw /home/openclaw/.local/share/openclaw
+sudo chown -R openclaw:openclaw /home/openclaw/.config/openclaw /home/openclaw/.local/share/openclaw
+sudo systemctl restart openclaw-gateway
 ```
 
 ## Diagnostic Commands
 
 | Command                                                                 | Purpose                        |
 | ----------------------------------------------------------------------- | ------------------------------ |
-| `sudo journalctl -u moltbot-gateway -n 50`                              | Last 50 log lines              |
-| `sudo journalctl -u moltbot-gateway -f`                                 | Follow logs in real time       |
-| `sudo systemctl status moltbot-gateway`                                 | Service status and recent logs |
-| `sudo -u moltbot -i moltbot --version`                                  | Installed moltbot version      |
-| `sudo -u moltbot -i moltbot doctor`                                     | Built-in diagnostic check      |
+| `sudo journalctl -u openclaw-gateway -n 50`                              | Last 50 log lines              |
+| `sudo journalctl -u openclaw-gateway -f`                                 | Follow logs in real time       |
+| `sudo systemctl status openclaw-gateway`                                 | Service status and recent logs |
+| `sudo -u openclaw -i moltbot --version`                                  | Installed moltbot version      |
+| `sudo -u openclaw -i openclaw doctor`                                     | Built-in diagnostic check      |
 | `sudo ss -tlnp \| grep 18789`                                           | Check if port is in use        |
 | `sudo dmesg \| grep -i oom`                                             | Check for OOM kills            |
-| `systemctl show moltbot-gateway -p MainPID,ActiveState,SubState,Result` | Detailed service state         |
+| `systemctl show openclaw-gateway -p MainPID,ActiveState,SubState,Result` | Detailed service state         |

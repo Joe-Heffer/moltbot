@@ -115,7 +115,7 @@ Small models that *might* fit in 2-4 GB RAM:
 
 ### Option 1: Free API Tiers (Already Configured!)
 
-Your deployment already includes these in the fallback chain (`moltbot.fallbacks.json`):
+Your deployment already includes these in the fallback chain (`openclaw.fallbacks.json`):
 
 #### **Google Gemini 2.5 Flash** (Recommended)
 - **Free tier**: 1,000 requests/day
@@ -126,8 +126,8 @@ Your deployment already includes these in the fallback chain (`moltbot.fallbacks
 **Setup**:
 ```bash
 # Get free API key at https://aistudio.google.com/apikey
-echo "GEMINI_API_KEY=your_key_here" >> /opt/moltbot/.env
-sudo systemctl restart moltbot-gateway
+echo "GEMINI_API_KEY=your_key_here" >> /opt/openclaw/.env
+sudo systemctl restart openclaw-gateway
 ```
 
 #### **OpenRouter Free Models**
@@ -139,8 +139,8 @@ sudo systemctl restart moltbot-gateway
 **Setup**:
 ```bash
 # Get API key at https://openrouter.ai/keys
-echo "OPENROUTER_API_KEY=sk-or-..." >> /opt/moltbot/.env
-sudo systemctl restart moltbot-gateway
+echo "OPENROUTER_API_KEY=sk-or-..." >> /opt/openclaw/.env
+sudo systemctl restart openclaw-gateway
 ```
 
 ### Option 2: Ultra-Budget API Models
@@ -166,13 +166,13 @@ Check if backups are active:
 
 ```bash
 # SSH to your VPS
-cd /opt/moltbot
+cd /opt/openclaw
 
 # View configured fallbacks
-sudo -u moltbot openclaw models fallbacks list
+sudo -u openclaw openclaw models fallbacks list
 
 # Check which API keys are set
-sudo -u moltbot cat .env | grep -E '(GEMINI|OPENROUTER|OPENAI)_API_KEY'
+sudo -u openclaw cat .env | grep -E '(GEMINI|OPENROUTER|OPENAI)_API_KEY'
 ```
 
 **If fallbacks aren't configured**, run:
@@ -248,22 +248,22 @@ ollama pull phi4
 
 3. **Configure OpenClaw**:
 
-Edit `/opt/moltbot/.env` or use the CLI:
+Edit `/opt/openclaw/.env` or use the CLI:
 
 ```bash
-sudo -u moltbot openclaw models add ollama/phi4 \
+sudo -u openclaw openclaw models add ollama/phi4 \
   --provider ollama \
   --base-url http://localhost:11434/v1 \
   --api-key ollama-local
 
 # Add as last-resort fallback
-sudo -u moltbot openclaw models fallbacks add ollama/phi4
+sudo -u openclaw openclaw models fallbacks add ollama/phi4
 ```
 
 4. **Test**:
 ```bash
 # Stop primary providers temporarily to test fallback
-sudo -u moltbot openclaw chat "What is 2+2?"
+sudo -u openclaw openclaw chat "What is 2+2?"
 ```
 
 ### Example 2: Ollama on Separate Hardware (Recommended)
@@ -297,12 +297,12 @@ ollama pull qwen2.5:14b
 4. **Configure OpenClaw to use remote Ollama**:
 ```bash
 # Replace YOUR_HOME_IP with your home server's public IP or domain
-sudo -u moltbot openclaw models add ollama/llama3.3 \
+sudo -u openclaw openclaw models add ollama/llama3.3 \
   --provider ollama \
   --base-url http://YOUR_HOME_IP:11434/v1 \
   --api-key ollama-local
 
-sudo -u moltbot openclaw models fallbacks add ollama/llama3.3
+sudo -u openclaw openclaw models fallbacks add ollama/llama3.3
 ```
 
 5. **Secure the connection** (recommended):
@@ -442,7 +442,7 @@ htop
 ollama pull phi4  # 3.8B instead of 7B
 
 # Or switch to API fallback
-sudo -u moltbot openclaw config set agents.defaults.model google/gemini-2.5-flash
+sudo -u openclaw openclaw config set agents.defaults.model google/gemini-2.5-flash
 ```
 
 ### Slow Response Times
@@ -465,8 +465,8 @@ ollama pull gemma2:2b  # 2B params, very fast
 3. **Switch to API temporarily**:
 ```bash
 # Temporarily move Ollama to end of fallback list
-sudo -u moltbot openclaw models fallbacks remove ollama/llama3.3
-sudo -u moltbot openclaw models fallbacks add ollama/llama3.3  # Re-adds at end
+sudo -u openclaw openclaw models fallbacks remove ollama/llama3.3
+sudo -u openclaw openclaw models fallbacks add ollama/llama3.3  # Re-adds at end
 ```
 
 ### Tool Calling Failures

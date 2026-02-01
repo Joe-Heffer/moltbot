@@ -6,10 +6,10 @@ This guide explains how to configure automated backups of your OpenClaw agent's 
 
 OpenClaw agents learn from interactions and store memories, conversation history, and configuration in several directories:
 
-- `/home/moltbot/.clawdbot` - Legacy agent data
-- `/home/moltbot/clawd/memory` - Current agent memory files
-- `/home/moltbot/.config/moltbot` - Configuration files
-- `/home/moltbot/.local/share/moltbot` - Persistent application data
+- `/home/openclaw/clawd` - Legacy agent data
+- `/home/openclaw/clawd/memory` - Current agent memory files
+- `/home/openclaw/.config/openclaw` - Configuration files
+- `/home/openclaw/.local/share/openclaw` - Persistent application data
 
 These files contain valuable context about your preferences, ongoing conversations, and learned information. Backing them up regularly ensures you can restore your agent's memory if the VM is reset or fails.
 
@@ -44,23 +44,23 @@ Create a **private** repository on GitHub, GitLab, or your preferred Git hosting
 
 ```bash
 # Example: GitHub CLI
-gh repo create moltbot-backup --private
+gh repo create openclaw-backup --private
 
 # Or create manually at https://github.com/new (ensure it's marked Private)
 ```
 
 #### 2. Generate SSH Key for Backup Access
 
-Generate an SSH key for the moltbot user:
+Generate an SSH key for the openclaw user:
 
 ```bash
-sudo -u moltbot ssh-keygen -t ed25519 -C "moltbot-backup" -f /home/moltbot/.ssh/id_ed25519_backup
+sudo -u openclaw ssh-keygen -t ed25519 -C "openclaw-backup" -f /home/openclaw/.ssh/id_ed25519_backup
 ```
 
 Display the public key:
 
 ```bash
-sudo -u moltbot cat /home/moltbot/.ssh/id_ed25519_backup.pub
+sudo -u openclaw cat /home/openclaw/.ssh/id_ed25519_backup.pub
 ```
 
 #### 3. Add Deploy Key to Repository
@@ -77,7 +77,7 @@ Check "Allow write access" when adding the key.
 Create SSH config to use the backup key:
 
 ```bash
-sudo -u moltbot tee -a /home/moltbot/.ssh/config > /dev/null <<'EOF'
+sudo -u openclaw tee -a /home/openclaw/.ssh/config > /dev/null <<'EOF'
 Host github.com-backup
     HostName github.com
     User git
@@ -85,8 +85,8 @@ Host github.com-backup
     IdentitiesOnly yes
 EOF
 
-sudo chown moltbot:moltbot /home/moltbot/.ssh/config
-sudo chmod 600 /home/moltbot/.ssh/config
+sudo chown openclaw:openclaw /home/openclaw/.ssh/config
+sudo chmod 600 /home/openclaw/.ssh/config
 ```
 
 #### 5. Configure Backup Settings
@@ -94,8 +94,8 @@ sudo chmod 600 /home/moltbot/.ssh/config
 Copy and edit the backup configuration template:
 
 ```bash
-sudo cp /home/moltbot/.config/moltbot/backup.conf.template /home/moltbot/.config/moltbot/backup.conf
-sudo nano /home/moltbot/.config/moltbot/backup.conf
+sudo cp /home/openclaw/.config/openclaw/backup.conf.template /home/openclaw/.config/openclaw/backup.conf
+sudo nano /home/openclaw/.config/openclaw/backup.conf
 ```
 
 Set the following values:
@@ -105,7 +105,7 @@ Set the following values:
 BACKUP_METHOD=git
 
 # Git repository URL (using SSH config host)
-BACKUP_GIT_REPO=git@github.com-backup:yourusername/moltbot-backup.git
+BACKUP_GIT_REPO=git@github.com-backup:yourusername/openclaw-backup.git
 
 # Branch to use
 BACKUP_GIT_BRANCH=main
@@ -116,7 +116,7 @@ BACKUP_GIT_BRANCH=main
 Run a manual backup to verify configuration:
 
 ```bash
-sudo /opt/moltbot-deployment/deploy/backup-agent-memory.sh
+sudo /opt/openclaw-deployment/deploy/backup-agent-memory.sh
 ```
 
 Check the output for errors. Verify the backup appears in your Git repository.
@@ -126,19 +126,19 @@ Check the output for errors. Verify the backup appears in your Git repository.
 Enable the systemd timer to run daily backups at 3:00 AM:
 
 ```bash
-sudo systemctl enable --now moltbot-backup.timer
+sudo systemctl enable --now openclaw-backup.timer
 ```
 
 Check timer status:
 
 ```bash
-systemctl status moltbot-backup.timer
+systemctl status openclaw-backup.timer
 ```
 
 View upcoming backup schedule:
 
 ```bash
-systemctl list-timers moltbot-backup.timer
+systemctl list-timers openclaw-backup.timer
 ```
 
 ### Option 2: Cloud Storage Backup (rclone)
@@ -164,8 +164,8 @@ Follow the prompts to configure your cloud provider (Google Drive, Dropbox, S3, 
 Copy and edit the backup configuration template:
 
 ```bash
-sudo cp /home/moltbot/.config/moltbot/backup.conf.template /home/moltbot/.config/moltbot/backup.conf
-sudo nano /home/moltbot/.config/moltbot/backup.conf
+sudo cp /home/openclaw/.config/openclaw/backup.conf.template /home/openclaw/.config/openclaw/backup.conf
+sudo nano /home/openclaw/.config/openclaw/backup.conf
 ```
 
 Set the following values:
@@ -175,7 +175,7 @@ Set the following values:
 BACKUP_METHOD=rclone
 
 # Remote and path (format: remote:path)
-BACKUP_RCLONE_REMOTE=gdrive:moltbot-backup
+BACKUP_RCLONE_REMOTE=gdrive:openclaw-backup
 
 # Retention (days to keep old backups)
 BACKUP_RETENTION_DAYS=30
@@ -184,7 +184,7 @@ BACKUP_RETENTION_DAYS=30
 #### 4. Test the Backup
 
 ```bash
-sudo /opt/moltbot-deployment/deploy/backup-agent-memory.sh
+sudo /opt/openclaw-deployment/deploy/backup-agent-memory.sh
 ```
 
 Verify the backup appears in your cloud storage.
@@ -192,7 +192,7 @@ Verify the backup appears in your cloud storage.
 #### 5. Enable Automated Backups
 
 ```bash
-sudo systemctl enable --now moltbot-backup.timer
+sudo systemctl enable --now openclaw-backup.timer
 ```
 
 ## Managing Backups
@@ -202,7 +202,7 @@ sudo systemctl enable --now moltbot-backup.timer
 Trigger an immediate backup:
 
 ```bash
-sudo systemctl start moltbot-backup.service
+sudo systemctl start openclaw-backup.service
 ```
 
 ### Check Backup Logs
@@ -210,19 +210,19 @@ sudo systemctl start moltbot-backup.service
 View recent backup logs:
 
 ```bash
-sudo journalctl -u moltbot-backup.service -n 50
+sudo journalctl -u openclaw-backup.service -n 50
 ```
 
 Follow backup logs in real-time:
 
 ```bash
-sudo journalctl -u moltbot-backup.service -f
+sudo journalctl -u openclaw-backup.service -f
 ```
 
 ### Disable Automated Backups
 
 ```bash
-sudo systemctl disable --now moltbot-backup.timer
+sudo systemctl disable --now openclaw-backup.timer
 ```
 
 ### Change Backup Schedule
@@ -230,7 +230,7 @@ sudo systemctl disable --now moltbot-backup.timer
 Edit the timer configuration:
 
 ```bash
-sudo systemctl edit --full moltbot-backup.timer
+sudo systemctl edit --full openclaw-backup.timer
 ```
 
 Modify the `OnCalendar` directive. Examples:
@@ -258,42 +258,42 @@ sudo systemctl daemon-reload
 
 ```bash
 # Stop the service
-sudo systemctl stop moltbot-gateway
+sudo systemctl stop openclaw-gateway
 
 # Clone the backup repository
-sudo -u moltbot git clone YOUR_BACKUP_REPO_URL /tmp/restore
+sudo -u openclaw git clone YOUR_BACKUP_REPO_URL /tmp/restore
 
 # Restore files (example for memory directory)
-sudo -u moltbot rsync -av /tmp/restore/clawd/memory/ /home/moltbot/clawd/memory/
-sudo -u moltbot rsync -av /tmp/restore/.clawdbot/ /home/moltbot/.clawdbot/
-sudo -u moltbot rsync -av /tmp/restore/.config/moltbot/ /home/moltbot/.config/moltbot/
+sudo -u openclaw rsync -av /tmp/restore/clawd/memory/ /home/openclaw/clawd/memory/
+sudo -u openclaw rsync -av /tmp/restore/.openclaw/ /home/openclaw/clawd/
+sudo -u openclaw rsync -av /tmp/restore/.config/openclaw/ /home/openclaw/.config/openclaw/
 
 # Clean up
 sudo rm -rf /tmp/restore
 
 # Start the service
-sudo systemctl start moltbot-gateway
+sudo systemctl start openclaw-gateway
 ```
 
 ### Cloud Storage Restore
 
 ```bash
 # Stop the service
-sudo systemctl stop moltbot-gateway
+sudo systemctl stop openclaw-gateway
 
 # Download latest backup (adjust remote path as needed)
-sudo rclone sync gdrive:moltbot-backup/latest /tmp/restore
+sudo rclone sync gdrive:openclaw-backup/latest /tmp/restore
 
 # Restore files
-sudo -u moltbot rsync -av /tmp/restore/clawd/memory/ /home/moltbot/clawd/memory/
-sudo -u moltbot rsync -av /tmp/restore/.clawdbot/ /home/moltbot/.clawdbot/
-sudo -u moltbot rsync -av /tmp/restore/.config/moltbot/ /home/moltbot/.config/moltbot/
+sudo -u openclaw rsync -av /tmp/restore/clawd/memory/ /home/openclaw/clawd/memory/
+sudo -u openclaw rsync -av /tmp/restore/.openclaw/ /home/openclaw/clawd/
+sudo -u openclaw rsync -av /tmp/restore/.config/openclaw/ /home/openclaw/.config/openclaw/
 
 # Clean up
 sudo rm -rf /tmp/restore
 
 # Start the service
-sudo systemctl start moltbot-gateway
+sudo systemctl start openclaw-gateway
 ```
 
 ## Troubleshooting
@@ -305,8 +305,8 @@ sudo systemctl start moltbot-gateway
 **Fix:** Copy and configure the template:
 
 ```bash
-sudo cp /home/moltbot/.config/moltbot/backup.conf.template /home/moltbot/.config/moltbot/backup.conf
-sudo nano /home/moltbot/.config/moltbot/backup.conf
+sudo cp /home/openclaw/.config/openclaw/backup.conf.template /home/openclaw/.config/openclaw/backup.conf
+sudo nano /home/openclaw/.config/openclaw/backup.conf
 ```
 
 ### Git Push Permission Denied
@@ -318,7 +318,7 @@ sudo nano /home/moltbot/.config/moltbot/backup.conf
 1. Verify the public key is added as a deploy key with write access
 2. Test SSH connection:
    ```bash
-   sudo -u moltbot ssh -T git@github.com-backup
+   sudo -u openclaw ssh -T git@github.com-backup
    ```
 
 ### Rclone Command Not Found
@@ -336,7 +336,7 @@ curl https://rclone.org/install.sh | sudo bash
 Check the service logs:
 
 ```bash
-sudo journalctl -u moltbot-backup.service -n 50 --no-pager
+sudo journalctl -u openclaw-backup.service -n 50 --no-pager
 ```
 
 Common issues:

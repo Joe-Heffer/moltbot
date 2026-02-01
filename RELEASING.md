@@ -1,10 +1,10 @@
-# Releasing Moltbot
+# Releasing OpenClaw Deployment
 
-This document describes how to create releases for the Moltbot deployment repository.
+This document describes how to create releases for the OpenClaw deployment repository.
 
 ## Versioning Scheme
 
-Moltbot uses **semantic versioning** (MAJOR.MINOR.PATCH), starting at `0.1.0`.
+This repository uses **semantic versioning** (MAJOR.MINOR.PATCH), starting at `0.1.0`.
 
 - **MAJOR**: Breaking changes (e.g., systemd service breaking changes, incompatible deployment steps)
 - **MINOR**: New features (e.g., new deployment script, new workflow capability)
@@ -112,14 +112,14 @@ If the automated workflow fails or you need to create a release manually:
 
 Each time the deployment workflow runs, it:
 - Captures the repository version from the `VERSION` file
-- Stores it on the VPS at `/opt/moltbot-version` for tracking
+- Stores it on the VPS at `/opt/openclaw-version` for tracking
 - Displays it in the deployment logs and health check output
 
 To check which version is currently deployed on your VPS:
 
 ```bash
 # On your VPS
-cat /opt/moltbot-version
+cat /opt/openclaw-version
 ```
 
 Or check the deployment history in GitHub:

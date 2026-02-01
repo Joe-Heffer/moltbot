@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Shared library for Moltbot deployment scripts
+# Shared library for OpenClaw deployment scripts
 # Source this file at the top of each script:
 #   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 #   source "${SCRIPT_DIR}/lib.sh"
@@ -53,7 +53,7 @@ validate_port() {
 # a temporary swap file before the install and clean it up afterwards.
 
 readonly LIB_INSTALL_MIN_MEMORY_MB=2048
-readonly LIB_TEMP_SWAP_FILE="/var/tmp/moltbot-install.swap"
+readonly LIB_TEMP_SWAP_FILE="/var/tmp/openclaw-install.swap"
 
 # Create and activate a temporary swap file if RAM + existing swap is
 # below LIB_INSTALL_MIN_MEMORY_MB.  Safe to call as a no-op when there
@@ -97,7 +97,7 @@ remove_temp_swap() {
     fi
 }
 
-# Compute memory limits for the moltbot-gateway systemd service.
+# Compute memory limits for the openclaw-gateway systemd service.
 # Sets two globals:
 #   LIB_NODE_HEAP_SIZE  — V8 --max-old-space-size in MB
 #   LIB_MEMORY_MAX      — systemd MemoryMax value (e.g. "1024M" or "2G")

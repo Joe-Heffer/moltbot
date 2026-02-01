@@ -29,13 +29,13 @@ If the primary model fails (rate limits, API errors), OpenClaw automatically swi
 Edit the fallback configuration:
 
 ```bash
-sudo -u moltbot nano /home/moltbot/.config/moltbot/moltbot.fallbacks.json
+sudo -u openclaw nano /home/openclaw/.config/openclaw/openclaw.fallbacks.json
 ```
 
 Then apply changes:
 
 ```bash
-sudo /opt/moltbot-deployment/deploy/configure-fallbacks.sh
+sudo /opt/openclaw-deployment/deploy/configure-fallbacks.sh
 ```
 
 The fallbacks configuration file controls:
@@ -43,15 +43,15 @@ The fallbacks configuration file controls:
 - Model selection per provider
 - Timeout and retry behavior
 
-For detailed fallback configuration options, see the template at `deploy/moltbot.fallbacks.json`.
+For detailed fallback configuration options, see the template at `deploy/openclaw.fallbacks.json`.
 
 ## Environment Variables
 
 Copy the template and configure your settings:
 
 ```bash
-sudo -u moltbot cp /home/moltbot/.config/moltbot/moltbot.env.template /home/moltbot/.config/moltbot/.env
-sudo -u moltbot nano /home/moltbot/.config/moltbot/.env
+sudo -u openclaw cp /home/openclaw/.config/openclaw/openclaw.env.template /home/openclaw/.config/openclaw/.env
+sudo -u openclaw nano /home/openclaw/.config/openclaw/.env
 ```
 
 ### AI Provider Keys
@@ -73,7 +73,7 @@ At least one API key is required. Multiple keys enable automatic failover.
 
 ```bash
 # Gateway web interface port (default: 18789)
-MOLTBOT_PORT=18789
+OPENCLAW_PORT=18789
 
 # Trusted proxies (if using reverse proxy like nginx or Tailscale)
 GATEWAY_TRUSTED_PROXIES=127.0.0.1
@@ -120,7 +120,7 @@ For complete channel setup, see the [official channel configuration guide](https
 The easiest way to configure OpenClaw:
 
 ```bash
-sudo -u moltbot -i moltbot onboard
+sudo -u openclaw -i openclaw onboard
 ```
 
 This interactive wizard guides you through:
@@ -141,19 +141,19 @@ If you prefer to configure manually:
 
 ```bash
 # 1. Copy the env template
-sudo -u moltbot cp /home/moltbot/.config/moltbot/moltbot.env.template /home/moltbot/.config/moltbot/.env
+sudo -u openclaw cp /home/openclaw/.config/openclaw/openclaw.env.template /home/openclaw/.config/openclaw/.env
 
 # 2. Edit with your API keys
-sudo -u moltbot nano /home/moltbot/.config/moltbot/.env
+sudo -u openclaw nano /home/openclaw/.config/openclaw/.env
 
 # 3. Set up fallbacks
-sudo /opt/moltbot-deployment/deploy/configure-fallbacks.sh
+sudo /opt/openclaw-deployment/deploy/configure-fallbacks.sh
 
 # 4. Generate an auth token (if not already done)
-sudo -u moltbot -i moltbot config set gateway.auth.token "$(openssl rand -hex 32)"
+sudo -u openclaw -i openclaw config set gateway.auth.token "$(openssl rand -hex 32)"
 
 # 5. Restart the service
-sudo systemctl restart moltbot-gateway
+sudo systemctl restart openclaw-gateway
 ```
 
 ## Changing Configuration
@@ -162,20 +162,20 @@ After modifying `.env`:
 
 ```bash
 # Restart the service to apply changes
-sudo systemctl restart moltbot-gateway
+sudo systemctl restart openclaw-gateway
 
 # View logs to confirm it started
-sudo journalctl -u moltbot-gateway -f
+sudo journalctl -u openclaw-gateway -f
 ```
 
 To change configuration programmatically:
 
 ```bash
 # Set a value
-sudo -u moltbot -i moltbot config set gateway.port 18789
+sudo -u openclaw -i openclaw config set gateway.port 18789
 
 # View current config
-sudo -u moltbot -i cat /home/moltbot/.moltbot/moltbot.json | jq .
+sudo -u openclaw -i cat /home/openclaw/clawd/moltbot.json | jq .
 ```
 
 ## Reverse Proxy Configuration
@@ -185,7 +185,7 @@ If you expose OpenClaw through a reverse proxy (nginx, Tailscale, Cloudflare):
 ### Set Trusted Proxies
 
 ```bash
-# In /home/moltbot/.config/moltbot/.env
+# In /home/openclaw/.config/openclaw/.env
 GATEWAY_TRUSTED_PROXIES=127.0.0.1        # Local proxy
 GATEWAY_TRUSTED_PROXIES=100.64.0.0/10    # Tailscale CGNAT
 ```
@@ -195,7 +195,7 @@ The deploy script converts this to `gateway.trustedProxies` in the JSON config.
 Or set directly:
 
 ```bash
-sudo -u moltbot -i moltbot config set gateway.trustedProxies '["127.0.0.1"]'
+sudo -u openclaw -i openclaw config set gateway.trustedProxies '["127.0.0.1"]'
 ```
 
 This ensures the gateway reads the real client IP from `X-Forwarded-For` headers instead of the proxy's IP.
@@ -205,7 +205,7 @@ This ensures the gateway reads the real client IP from `X-Forwarded-For` headers
 Run the doctor command to check your configuration:
 
 ```bash
-sudo -u moltbot -i moltbot doctor
+sudo -u openclaw -i openclaw doctor
 ```
 
 This verifies:
@@ -217,7 +217,7 @@ This verifies:
 Use `--repair` to fix common issues automatically:
 
 ```bash
-sudo -u moltbot -i moltbot doctor --repair
+sudo -u openclaw -i openclaw doctor --repair
 ```
 
 ## Related Documentation

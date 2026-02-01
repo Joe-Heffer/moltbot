@@ -81,18 +81,18 @@ sudo ./deploy/deploy.sh
 
 ### Configure via Onboarding
 ```bash
-sudo -u moltbot -i moltbot onboard
+sudo -u openclaw -i openclaw onboard
 ```
 
 ### Start the Service
 ```bash
-sudo systemctl start moltbot-gateway
-sudo systemctl enable moltbot-gateway
+sudo systemctl start openclaw-gateway
+sudo systemctl enable openclaw-gateway
 ```
 
 ### View Logs
 ```bash
-sudo journalctl -u moltbot-gateway -f
+sudo journalctl -u openclaw-gateway -f
 ```
 
 ### Update OpenClaw

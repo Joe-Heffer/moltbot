@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Initial Server Setup for Moltbot Deployment
+# Initial Server Setup for OpenClaw Deployment
 # Run this ONCE on a fresh VPS to prepare for CI/CD deployments
 #
 
@@ -10,8 +10,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/lib.sh"
 
 DEPLOY_USER="${DEPLOY_USER:-deploy}"
-DEPLOY_PATH="/opt/moltbot-deploy"
-GITHUB_REPO="${GITHUB_REPO:-Joe-Heffer/moltbot}"
+DEPLOY_PATH="/opt/openclaw-deploy"
+GITHUB_REPO="${GITHUB_REPO:-Joe-Heffer/openclaw}"
 
 create_deploy_user() {
     log_info "Setting up deployment user..."
@@ -32,31 +32,31 @@ create_deploy_user() {
 
     # Principle of least privilege: only allow the specific commands needed
     # for deployment operations.
-    # Note: the deploy user owns /opt/moltbot-deploy (can modify scripts
+    # Note: the deploy user owns /opt/openclaw-deploy (can modify scripts
     # there), so a wildcard for deploy/*.sh is security-equivalent to
     # naming individual scripts — but avoids sudoers breakage when deploy
     # scripts are renamed.
-    cat > /etc/sudoers.d/moltbot-deploy << EOF
-# Allow deploy user to manage moltbot service and run deploy scripts
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} start moltbot-gateway
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} stop moltbot-gateway
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} restart moltbot-gateway
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} status moltbot-gateway
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} status moltbot-gateway --no-pager
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} is-active moltbot-gateway
+    cat > /etc/sudoers.d/openclaw-deploy << EOF
+# Allow deploy user to manage openclaw service and run deploy scripts
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} start openclaw-gateway
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} stop openclaw-gateway
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} restart openclaw-gateway
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} status openclaw-gateway
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} status openclaw-gateway --no-pager
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} is-active openclaw-gateway
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${systemctl_path} daemon-reload
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${journalctl_path} -u moltbot-gateway *
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${journalctl_path} -u openclaw-gateway *
 ${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${DEPLOY_PATH}/deploy/*.sh
-${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${su_path} - moltbot -c *
+${DEPLOY_USER} ALL=(ALL) NOPASSWD: ${su_path} - openclaw -c *
 EOF
 
-    chmod 440 /etc/sudoers.d/moltbot-deploy
+    chmod 440 /etc/sudoers.d/openclaw-deploy
 
     # Validate sudoers syntax to avoid lockout
     if command -v visudo &> /dev/null; then
-        if ! visudo -cf /etc/sudoers.d/moltbot-deploy; then
+        if ! visudo -cf /etc/sudoers.d/openclaw-deploy; then
             log_error "Invalid sudoers syntax — removing file to prevent lockout"
-            rm -f /etc/sudoers.d/moltbot-deploy
+            rm -f /etc/sudoers.d/openclaw-deploy
             exit 1
         fi
     fi
@@ -84,15 +84,15 @@ setup_ssh_for_deploy() {
     echo "=============================================="
     echo ""
     echo "1. Generate an SSH key pair for GitHub Actions (on your local machine):"
-    echo "   ssh-keygen -t ed25519 -C \"github-actions-moltbot\" -f ~/.ssh/moltbot-deploy"
+    echo "   ssh-keygen -t ed25519 -C \"github-actions-openclaw\" -f ~/.ssh/openclaw-deploy"
     echo ""
     echo "2. Add the PUBLIC key to this server:"
     echo "   Edit: ${ssh_dir}/authorized_keys"
-    echo "   Paste the contents of: ~/.ssh/moltbot-deploy.pub"
+    echo "   Paste the contents of: ~/.ssh/openclaw-deploy.pub"
     echo ""
     echo "3. Add the PRIVATE key to GitHub repository secrets:"
     echo "   - Go to: https://github.com/${GITHUB_REPO}/settings/secrets/actions"
-    echo "   - Add secret: VPS_SSH_KEY (paste contents of ~/.ssh/moltbot-deploy)"
+    echo "   - Add secret: VPS_SSH_KEY (paste contents of ~/.ssh/openclaw-deploy)"
     echo "   - Add secret: VPS_HOST (your server IP)"
     echo "   - Add secret: VPS_USERNAME (${DEPLOY_USER})"
     echo "   - Add secret: VPS_PORT (22 or your SSH port)"
@@ -163,13 +163,13 @@ print_next_steps() {
     echo "   - Manual: sudo ${DEPLOY_PATH}/deploy/deploy.sh"
     echo "   - GitHub: Trigger 'Deploy to VPS' workflow"
     echo ""
-    echo "4. Complete moltbot onboarding:"
-    echo "   sudo -u moltbot -i moltbot onboard"
+    echo "4. Complete openclaw onboarding:"
+    echo "   sudo -u openclaw -i openclaw onboard"
     echo ""
 }
 
 main() {
-    log_info "Moltbot Server Setup Script"
+    log_info "OpenClaw Server Setup Script"
     echo ""
 
     require_root

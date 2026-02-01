@@ -1,6 +1,6 @@
 # WhatsApp Terms of Service & Legal Considerations
 
-Moltbot can connect to WhatsApp as one of its supported messaging channels. Before enabling WhatsApp, you should understand the legal and policy landscape. **Using unofficial WhatsApp automation of any kind -- including personal use -- violates WhatsApp's Terms of Service and carries real risk of account bans.**
+OpenClaw can connect to WhatsApp as one of its supported messaging channels. Before enabling WhatsApp, you should understand the legal and policy landscape. **Using unofficial WhatsApp automation of any kind -- including personal use -- violates WhatsApp's Terms of Service and carries real risk of account bans.**
 
 > **Disclaimer:** This document is informational only and does not constitute legal advice. Read the primary sources linked below and consult a qualified attorney if you need legal guidance.
 
@@ -21,7 +21,7 @@ Moltbot can connect to WhatsApp as one of its supported messaging channels. Befo
 |----------|--------|
 | Does WhatsApp allow unofficial bots on personal accounts? | **No.** Automated and non-personal use is explicitly prohibited. |
 | Does WhatsApp allow bots via the official Business API? | **Yes**, with restrictions (opt-in consent, template messages, escalation paths). |
-| Can I use Moltbot on WhatsApp for personal use? | It works technically, but **violates WhatsApp's Terms of Service** regardless of scale or intent. |
+| Can I use OpenClaw on WhatsApp for personal use? | It works technically, but **violates WhatsApp's Terms of Service** regardless of scale or intent. |
 | What happens if WhatsApp detects it? | Temporary or permanent ban of your phone number on WhatsApp. |
 | Is this different from Discord or Telegram bots? | **Yes.** Discord and Telegram provide official bot APIs for third-party use. WhatsApp does not offer an equivalent for personal accounts. |
 

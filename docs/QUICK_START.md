@@ -22,9 +22,9 @@ sudo ./deploy/deploy.sh
 
 The script will:
 - Install Node.js 22
-- Create a dedicated `moltbot` user
+- Create a dedicated `openclaw` user
 - Install OpenClaw globally via npm
-- Set up the `moltbot-gateway` systemd service
+- Set up the `openclaw-gateway` systemd service
 - Configure AI provider fallbacks
 
 ## Configuration
@@ -32,7 +32,7 @@ The script will:
 ### Run Onboarding
 
 ```bash
-sudo -u moltbot -i moltbot onboard
+sudo -u openclaw -i openclaw onboard
 ```
 
 The wizard guides you through:
@@ -47,23 +47,23 @@ If you prefer to configure manually instead of running onboarding:
 
 ```bash
 # Copy the environment template
-sudo -u moltbot cp /home/moltbot/.config/moltbot/moltbot.env.template /home/moltbot/.config/moltbot/.env
+sudo -u openclaw cp /home/openclaw/.config/openclaw/openclaw.env.template /home/openclaw/.config/openclaw/.env
 
 # Edit with your API keys
-sudo -u moltbot nano /home/moltbot/.config/moltbot/.env
+sudo -u openclaw nano /home/openclaw/.config/openclaw/.env
 ```
 
 Key settings:
 - `ANTHROPIC_API_KEY` — Anthropic Claude API key
 - `OPENAI_API_KEY` — OpenAI API key (optional)
 - `GEMINI_API_KEY` — Google Gemini API key (optional)
-- `MOLTBOT_PORT` — Gateway port (default: 18789)
+- `OPENCLAW_PORT` — Gateway port (default: 18789)
 
 ## Start the Service
 
 ```bash
-sudo systemctl start moltbot-gateway
-sudo systemctl enable moltbot-gateway
+sudo systemctl start openclaw-gateway
+sudo systemctl enable openclaw-gateway
 ```
 
 ## Access the Gateway UI
@@ -79,7 +79,7 @@ Replace `<your-vm-ip>` with your server's IP address.
 **Authentication**: The onboarding wizard generates an auth token automatically. Retrieve it with:
 
 ```bash
-sudo -u moltbot -i cat /home/moltbot/.moltbot/moltbot.json | jq -r '.gateway.auth.token'
+sudo -u openclaw -i cat /home/openclaw/clawd/moltbot.json | jq -r '.gateway.auth.token'
 ```
 
 Use the token in the URL or paste it into the Gateway UI login screen.
@@ -91,14 +91,14 @@ For details, see [Gateway UI Setup](./GATEWAY_UI.md).
 - **Connect channels**: Configure WhatsApp, Telegram, Discord, Slack, etc. (see [official channel docs](https://docs.openclaw.ai/channels))
 - **Install skills**: Explore the [Skills Marketplace](https://docs.openclaw.ai/tools/skills)
 - **Secure access**: Use [Tailscale](https://tailscale.com/) instead of exposing the port directly (see [Security Guide](./SECURITY.md))
-- **Monitor service**: View logs with `sudo journalctl -u moltbot-gateway -f`
-- **Run diagnostics**: Execute `sudo -u moltbot -i moltbot doctor`
+- **Monitor service**: View logs with `sudo journalctl -u openclaw-gateway -f`
+- **Run diagnostics**: Execute `sudo -u openclaw -i openclaw doctor`
 
 ## Troubleshooting
 
-- **Service won't start**: Check logs with `sudo journalctl -u moltbot-gateway -n 50`
+- **Service won't start**: Check logs with `sudo journalctl -u openclaw-gateway -n 50`
 - **Out of memory**: See [Low-Memory VPS](./LOW_MEMORY_VPS.md)
-- **Node.js issues**: Verify Node.js v22+ with `sudo -u moltbot -i node -v`
+- **Node.js issues**: Verify Node.js v22+ with `sudo -u openclaw -i node -v`
 - **More help**: See [Troubleshooting Guide](./TROUBLESHOOTING.md)
 
 ## Next Steps

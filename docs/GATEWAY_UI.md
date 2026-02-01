@@ -5,7 +5,7 @@ The OpenClaw Gateway includes a built-in web interface for managing your bot, mo
 ## Prerequisites
 
 - OpenClaw installed and running (see [Deployment Guide](./DEPLOYMENT.md))
-- The `moltbot-gateway` systemd service started
+- The `openclaw-gateway` systemd service started
 - Network access to your VM on port 18789
 
 ## Starting the Gateway
@@ -13,14 +13,14 @@ The OpenClaw Gateway includes a built-in web interface for managing your bot, mo
 If you followed the [Quick Start](../README.md#quick-start) instructions, the gateway service should already be running. Verify with:
 
 ```bash
-sudo systemctl status moltbot-gateway
+sudo systemctl status openclaw-gateway
 ```
 
 If the service is not running, start and enable it:
 
 ```bash
-sudo systemctl start moltbot-gateway
-sudo systemctl enable moltbot-gateway
+sudo systemctl start openclaw-gateway
+sudo systemctl enable openclaw-gateway
 ```
 
 ## Accessing the Gateway UI
@@ -41,20 +41,20 @@ http://localhost:18789
 
 ## Authentication
 
-The Gateway UI is protected by a token. The onboarding wizard (`moltbot onboard`) generates this token automatically and stores it in the OpenClaw config file at `/home/moltbot/.moltbot/moltbot.json` under the key `gateway.auth.token`.
+The Gateway UI is protected by a token. The onboarding wizard (`moltbot onboard`) generates this token automatically and stores it in the OpenClaw config file at `/home/openclaw/clawd/moltbot.json` under the key `gateway.auth.token`.
 
 ### Finding Your Token
 
 Retrieve the token with:
 
 ```bash
-sudo -u moltbot -i cat /home/moltbot/.moltbot/moltbot.json | jq -r '.gateway.auth.token'
+sudo -u openclaw -i cat /home/openclaw/clawd/moltbot.json | jq -r '.gateway.auth.token'
 ```
 
 If you don't have `jq` installed, you can read the full config and look for the `gateway.auth.token` value:
 
 ```bash
-sudo -u moltbot -i cat /home/moltbot/.moltbot/moltbot.json
+sudo -u openclaw -i cat /home/openclaw/clawd/moltbot.json
 ```
 
 The relevant section looks like:
@@ -85,41 +85,41 @@ There are two ways to authenticate with the Gateway UI:
 If the token was not generated during onboarding or you need to regenerate it, use the built-in doctor command:
 
 ```bash
-sudo -u moltbot -i moltbot doctor
+sudo -u openclaw -i openclaw doctor
 ```
 
-The doctor will detect that `gateway.auth` is missing and offer to generate a token. You can also set a token via environment variable by adding this to `/home/moltbot/.config/moltbot/.env`:
+The doctor will detect that `gateway.auth` is missing and offer to generate a token. You can also set a token via environment variable by adding this to `/home/openclaw/.config/openclaw/.env`:
 
 ```bash
-MOLTBOT_GATEWAY_TOKEN=your-token-here
+OPENCLAW_GATEWAY_TOKEN=your-token-here
 ```
 
 Then restart the service:
 
 ```bash
-sudo systemctl restart moltbot-gateway
+sudo systemctl restart openclaw-gateway
 ```
 
 ## Configuration
 
 ### Port and Bind Address
 
-The gateway port and bind address are configured in your environment file at `/home/moltbot/.config/moltbot/.env`:
+The gateway port and bind address are configured in your environment file at `/home/openclaw/.config/openclaw/.env`:
 
 ```bash
 # Port for the Gateway to listen on (default: 18789)
-MOLTBOT_PORT=18789
+OPENCLAW_PORT=18789
 
 # Bind address
 # 0.0.0.0 = accept connections from any network interface (required for remote access)
 # 127.0.0.1 = local connections only
-MOLTBOT_HOST=0.0.0.0
+OPENCLAW_HOST=0.0.0.0
 ```
 
 After changing these values, restart the service:
 
 ```bash
-sudo systemctl restart moltbot-gateway
+sudo systemctl restart openclaw-gateway
 ```
 
 ### Firewall
@@ -201,7 +201,7 @@ Place the gateway behind a reverse proxy (nginx, Caddy) with TLS termination for
 
 1. Verify the service is running:
    ```bash
-   sudo systemctl status moltbot-gateway
+   sudo systemctl status openclaw-gateway
    ```
 
 2. Check the gateway is listening on the expected port:
@@ -211,7 +211,7 @@ Place the gateway behind a reverse proxy (nginx, Caddy) with TLS termination for
 
 3. Check the logs for errors:
    ```bash
-   sudo journalctl -u moltbot-gateway -n 50
+   sudo journalctl -u openclaw-gateway -n 50
    ```
 
 4. Confirm the firewall allows traffic on port 18789 (see [Firewall](#firewall) above).
@@ -223,7 +223,7 @@ Place the gateway behind a reverse proxy (nginx, Caddy) with TLS termination for
 Run diagnostics to check for configuration issues:
 
 ```bash
-sudo -u moltbot -i moltbot doctor
+sudo -u openclaw -i openclaw doctor
 ```
 
 ## Further Reading
