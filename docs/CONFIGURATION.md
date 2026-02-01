@@ -47,6 +47,8 @@ For detailed fallback configuration options, see the template at `deploy/opencla
 
 ## Environment Variables
 
+This repository provides a comprehensive `openclaw.env.template` covering all common VPS deployment scenarios (multiple LLM providers, channels, gateway configuration, security settings, and performance tuning). While OpenClaw's own `.env.example` is minimal (Twilio credentials only), this deployment-focused template serves as executable documentation with inline setup guides.
+
 Copy the template and configure your settings:
 
 ```bash
