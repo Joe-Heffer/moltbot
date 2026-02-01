@@ -22,7 +22,7 @@ These contain your agent's learned context and conversation history:
   - Channel tokens (TELEGRAM_BOT_TOKEN, DISCORD_TOKEN, SLACK_BOT_TOKEN, etc.)
   - Gateway auth token
 - **`/home/moltbot/.config/moltbot/backup.conf`** - Backup configuration (if exists)
-- **`/home/moltbot/.config/moltbot/moltbot.fallbacks.json`** - Custom AI provider fallback config (if modified)
+- **`/home/moltbot/.config/moltbot/openclaw.fallbacks.json`** - Custom AI provider fallback config (if modified)
 - **`/home/moltbot/.moltbot/moltbot.json`** - Gateway auth token and application state
 
 ## Medium Priority: User Environment
