@@ -547,27 +547,57 @@ wait_for_healthy() {
     local attempt=1
     local last_pid=""
     local restarts=0
-    local max_restarts=5
+    local max_restarts=3
     local current_pid
+    local sub_state
+    local in_restart=false
 
     while [ $attempt -le $max_attempts ]; do
+        # Hard failure — systemd gave up restarting (e.g. start-limit hit)
         if systemctl is-failed --quiet "$SERVICE_NAME"; then
             echo ""
             log_error "Service entered failed state"
+            log_info "Recent logs:"
+            journalctl -u "$SERVICE_NAME" --no-pager -n 20 2>/dev/null || true
             return 1
         fi
 
-        if systemctl is-active --quiet "$SERVICE_NAME"; then
-            # Track PID to detect crash-restart loops
+        sub_state=$(systemctl show -p SubState --value "$SERVICE_NAME" 2>/dev/null || echo "")
+
+        # Detect crash-restart cycle: service crashed and systemd is
+        # waiting RestartSec before retrying.  The old PID-only check
+        # could not see this state and just printed dots for 10 seconds.
+        if [[ "$sub_state" == "auto-restart" && "$in_restart" == false ]]; then
+            in_restart=true
+            restarts=$((restarts + 1))
+            echo ""
+            log_warn "Service crashed and is restarting (#${restarts})"
+            journalctl -u "$SERVICE_NAME" --no-pager -n 5 2>/dev/null || true
+            last_pid=""
+            if [[ "$restarts" -ge "$max_restarts" ]]; then
+                log_error "Service crashed ${restarts} times — giving up (crash loop)"
+                log_info "Full recent logs:"
+                journalctl -u "$SERVICE_NAME" --no-pager -n 30 2>/dev/null || true
+                return 1
+            fi
+        fi
+
+        if [[ "$sub_state" == "running" ]]; then
+            in_restart=false
+
+            # Track PID as a fallback crash-loop detector (covers edge
+            # cases where the SubState transition is too fast to observe)
             current_pid=$(systemctl show -p MainPID --value "$SERVICE_NAME" 2>/dev/null || echo "")
             if [[ -n "$last_pid" && "$last_pid" != "0" \
                && -n "$current_pid" && "$current_pid" != "0" \
                && "$last_pid" != "$current_pid" ]]; then
                 restarts=$((restarts + 1))
+                echo ""
                 log_warn "Service restarted during health check (PID ${last_pid} -> ${current_pid}, #${restarts})"
                 if [[ "$restarts" -ge "$max_restarts" ]]; then
-                    echo ""
-                    log_error "Service restarted ${restarts} times during health check (crash loop)"
+                    log_error "Service crashed ${restarts} times — giving up (crash loop)"
+                    log_info "Full recent logs:"
+                    journalctl -u "$SERVICE_NAME" --no-pager -n 30 2>/dev/null || true
                     return 1
                 fi
             fi
@@ -590,6 +620,8 @@ wait_for_healthy() {
 
     echo ""
     log_error "Service failed to become healthy after ${max_attempts} seconds"
+    log_info "Recent logs:"
+    journalctl -u "$SERVICE_NAME" --no-pager -n 20 2>/dev/null || true
     return 1
 }
 
