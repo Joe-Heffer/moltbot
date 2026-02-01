@@ -25,7 +25,9 @@ cd moltbot
 sudo ./deploy/deploy.sh
 ```
 
-The deploy script handles Node.js 22 installation, dedicated user creation, systemd service setup, firewall configuration, and resource tuning. It is idempotent — safe to run for both first-time installation and subsequent updates. After first installation, run the onboarding wizard to configure API keys and channels.
+The deploy script handles Node.js 22 installation, dedicated user creation, systemd service setup, and resource tuning. It is idempotent — safe to run for both first-time installation and subsequent updates. After first installation, run the onboarding wizard to configure API keys and channels.
+
+**Note:** Firewall configuration is not automated. You must manually configure your firewall to allow traffic on port 18789 (see [Gateway UI Setup Guide](GATEWAY_UI.md#firewall)).
 
 **CI/CD deployment:**
 

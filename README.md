@@ -50,8 +50,7 @@ The `deploy.sh` script is idempotent — it handles both first-time installation
 3. Creates a dedicated `moltbot` user for security
 4. Installs or updates moltbot globally via npm
 5. Regenerates the systemd service (so configuration changes always propagate)
-6. Opens port 18789 in the firewall (if firewalld is active)
-7. Sets up AI provider fallback configuration (automatic retry on failures)
+6. Sets up AI provider fallback configuration (automatic retry on failures)
 
 If the service was already running (i.e. this is an update), it restarts the service, runs a health check, and executes `moltbot doctor --repair`. On first install, it prints onboarding instructions instead.
 

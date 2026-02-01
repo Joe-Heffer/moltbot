@@ -443,21 +443,6 @@ setup_backup_service() {
     log_info "  2. Run: sudo systemctl enable --now moltbot-backup.timer"
 }
 
-configure_firewall() {
-    log_info "Configuring firewall..."
-
-    if systemctl is-active --quiet firewalld 2>/dev/null; then
-        firewall-cmd --permanent --add-port="${MOLTBOT_PORT}/tcp"
-        firewall-cmd --reload
-        log_success "Firewall configured via firewalld (port ${MOLTBOT_PORT} opened)"
-    elif command -v ufw &> /dev/null && ufw status | grep -q "active"; then
-        ufw allow "${MOLTBOT_PORT}/tcp"
-        log_success "Firewall configured via ufw (port ${MOLTBOT_PORT} opened)"
-    else
-        log_warn "No active firewall detected, skipping firewall configuration"
-    fi
-}
-
 copy_env_template() {
     log_info "Creating environment template..."
 
@@ -616,6 +601,23 @@ run_doctor() {
     sudo -u "$MOLTBOT_USER" -i moltbot doctor --repair 2>/dev/null || true
 }
 
+save_deploy_version() {
+    # Save the repo VERSION to /opt/moltbot-version for deployment tracking.
+    # Previously this was done in the CI workflow with sudo tee/chown, but
+    # those commands were not covered by the deploy user's sudoers rules,
+    # causing "a terminal is required to read the password" errors.
+    # Since deploy.sh already runs as root, it can write the file directly.
+    local version_file="${SCRIPT_DIR}/../VERSION"
+    if [[ -f "$version_file" ]]; then
+        local version
+        version=$(cat "$version_file")
+        echo "$version" > /opt/moltbot-version
+        chown "${MOLTBOT_USER}:${MOLTBOT_USER}" /opt/moltbot-version
+        chmod 644 /opt/moltbot-version
+        log_info "Deploy version saved: ${version}"
+    fi
+}
+
 show_status() {
     echo ""
     log_info "Current status:"
@@ -692,9 +694,6 @@ main() {
     DEPLOY_PHASE="systemd setup"
     setup_systemd_service
 
-    DEPLOY_PHASE="firewall configuration"
-    configure_firewall
-
     DEPLOY_PHASE="environment template"
     copy_env_template
 
@@ -706,6 +705,9 @@ main() {
 
     DEPLOY_PHASE="backup service installation"
     setup_backup_service
+
+    DEPLOY_PHASE="version tracking"
+    save_deploy_version
 
     # Clear phase — core deployment succeeded
     DEPLOY_PHASE=""

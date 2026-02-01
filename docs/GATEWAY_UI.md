@@ -124,13 +124,13 @@ sudo systemctl restart moltbot-gateway
 
 ### Firewall
 
-The installer opens port 18789 automatically when firewalld is active. If you use a different firewall (e.g. `ufw`), allow the port manually:
+You must manually configure your firewall to allow traffic on port 18789. The installer does not automatically open firewall ports for security reasons.
 
 ```bash
 # ufw
 sudo ufw allow 18789/tcp
 
-# firewalld (if not already opened by the installer)
+# firewalld
 sudo firewall-cmd --permanent --add-port=18789/tcp
 sudo firewall-cmd --reload
 ```
