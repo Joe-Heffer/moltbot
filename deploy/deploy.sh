@@ -345,20 +345,52 @@ install_openclaw() {
 
     remove_temp_swap
 
-    # Verify binary was installed to the correct location
-    if [[ ! -x "${OPENCLAW_HOME}/.npm-global/bin/openclaw" ]]; then
-        log_error "openclaw binary not found at ${OPENCLAW_HOME}/.npm-global/bin/openclaw"
+    local expected_bin="${OPENCLAW_HOME}/.npm-global/bin/openclaw"
+
+    # If the binary isn't at the expected path, try to locate it via the
+    # openclaw user's login shell (npm may have used a different prefix).
+    if [[ ! -e "$expected_bin" ]]; then
+        local actual_bin
+        actual_bin=$(sudo -u "$OPENCLAW_USER" -i sh -c 'command -v openclaw' 2>/dev/null || true)
+        if [[ -n "$actual_bin" && -x "$actual_bin" ]]; then
+            log_warn "openclaw installed at ${actual_bin} instead of ${expected_bin}"
+            mkdir -p "$(dirname "$expected_bin")"
+            ln -sf "$actual_bin" "$expected_bin"
+            chown -h "${OPENCLAW_USER}:${OPENCLAW_USER}" "$expected_bin"
+            log_info "Created symlink: ${expected_bin} -> ${actual_bin}"
+        fi
+    fi
+
+    # Ensure the binary (and its symlink target) is executable.
+    # npm should set this, but some versions or interrupted installs can
+    # leave the execute bit unset — which root wouldn't notice but the
+    # openclaw service user would.
+    if [[ -e "$expected_bin" || -L "$expected_bin" ]]; then
+        chmod +x "$expected_bin" 2>/dev/null || true
+        local resolved
+        resolved=$(readlink -f "$expected_bin" 2>/dev/null || true)
+        if [[ -n "$resolved" && -f "$resolved" ]]; then
+            chmod +x "$resolved" 2>/dev/null || true
+        fi
+    fi
+
+    # Verify the binary is executable by the openclaw user (not just root)
+    # to match the systemd ExecStartPre check context.
+    if ! sudo -u "$OPENCLAW_USER" test -x "$expected_bin"; then
+        log_error "openclaw binary not found at ${expected_bin}"
         log_error "npm prefix may not be configured correctly"
         log_error "Contents of ${OPENCLAW_HOME}/.npmrc:"
         cat "${OPENCLAW_HOME}/.npmrc" 2>/dev/null || echo "(file not found)"
         log_error "npm global prefix reported by npm:"
         sudo -u "$OPENCLAW_USER" -i npm prefix -g 2>/dev/null || echo "(unable to determine)"
+        log_error "Contents of ${OPENCLAW_HOME}/.npm-global/bin/:"
+        ls -la "${OPENCLAW_HOME}/.npm-global/bin/" 2>/dev/null || echo "(directory not found)"
         exit 1
     fi
 
     # Create a symlink in /usr/local/bin so that `openclaw` is on the default
     # PATH for all users and shell types (login, non-login, sudo without -i).
-    ln -sf "${OPENCLAW_HOME}/.npm-global/bin/openclaw" /usr/local/bin/openclaw
+    ln -sf "$expected_bin" /usr/local/bin/openclaw
 
     local new_version
     new_version=$(sudo -u "$OPENCLAW_USER" -i openclaw --version 2>/dev/null || echo "unknown")
