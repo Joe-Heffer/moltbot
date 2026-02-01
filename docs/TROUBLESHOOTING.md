@@ -246,7 +246,7 @@ sudo systemctl restart openclaw-gateway
 2. **Port conflict** — another process is already using port 18789.
 3. **Out of memory** — the process is being OOM-killed.
 
-**Diagnosis:**
+**Diagnosis:** The deploy script now prints recent journal output automatically when a health check fails. You can also check manually:
 
 ```bash
 # Check journal for the actual error
@@ -259,18 +259,20 @@ sudo ss -tlnp | grep 18789
 sudo dmesg | grep -i "oom\|killed process" | tail -5
 ```
 
-### Service restart loop (PID keeps changing)
+### Service restart loop (crash loop)
 
-**Symptom:** The deploy script shows repeated warnings:
+**Symptom:** The deploy script shows repeated crash warnings and gives up:
 
 ```
-[WARN] Service restarted during health check (PID 35807 -> 35998, #1)
-[WARN] Service restarted during health check (PID 35998 -> 36184, #2)
+[WARN] Service crashed and is restarting (#1)
+[WARN] Service crashed and is restarting (#2)
+[WARN] Service crashed and is restarting (#3)
+[ERROR] Service crashed 3 times — giving up (crash loop)
 ```
 
-**Cause:** The service starts, crashes, and systemd restarts it (every 10 seconds by default). The health check detects the PID changing.
+**Cause:** The service starts, crashes (exit code 1), and systemd restarts it (every 10 seconds). The health check detects the `auto-restart` state and shows recent journal output for each crash.
 
-**Fix:** Check the journal for the underlying error — usually "Missing config" or an unhandled exception:
+**Fix:** Review the journal output shown by the deploy script. The most common causes are missing API keys, port conflicts, or unhandled exceptions:
 
 ```bash
 sudo journalctl -u openclaw-gateway --since "5 minutes ago" --no-pager
